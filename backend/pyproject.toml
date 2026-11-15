@@ -1,0 +1,49 @@
+[project]
+name = "helixa-backend"
+version = "0.1.0"
+description = "Helixa data layer: schema migrations, models, and session-context helpers"
+requires-python = ">=3.11"
+dependencies = [
+    "sqlalchemy>=2.0,<3",
+    "alembic>=1.13",
+    "psycopg[binary]>=3.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "testcontainers[postgres]>=4.0",
+    "ruff>=0.6",
+]
+
+[tool.setuptools]
+packages = ["app", "app.db"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["app", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501", # line length handled by formatter
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
