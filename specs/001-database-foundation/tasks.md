@@ -85,21 +85,21 @@ description: "Task list for Database Foundation (Spec 1)"
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T021 [P] [US2] `backend/tests/db/test_workflow.py`: advancing a sample inserts a `sample_stage_events` row with `duration_hours`; UPDATE/DELETE on `sample_stage_events` raise (FR-003); changing `stage_sla.sla_days` does not alter past `duration_hours` (FR-006); inserting a duplicate `samples.case_id` is rejected (FR-009, SC-007)
-- [ ] T022 [P] [US2] `backend/tests/db/test_stages_seed.py`: exactly 8 stages with `position` 1..8 unique and the default SLA split `1,2,4,4,2,1,2,2` (Σ=18); one default `working_calendar` with `weekend_days = {5}` (Friday) (FR-005, FR-006, FR-008)
+- [X] T021 [P] [US2] `backend/tests/db/test_workflow.py`: advancing a sample inserts a `sample_stage_events` row with `duration_hours`; UPDATE/DELETE on `sample_stage_events` raise (FR-003); changing `stage_sla.sla_days` does not alter past `duration_hours` (FR-006); inserting a duplicate `samples.case_id` is rejected (FR-009, SC-007)
+- [X] T022 [P] [US2] `backend/tests/db/test_stages_seed.py`: exactly 8 stages with `position` 1..8 unique and the default SLA split `1,2,4,4,2,1,2,2` (Σ=18); one default `working_calendar` with `weekend_days = {5}` (Friday) (FR-005, FR-006, FR-008)
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] In migration `0001`, create `stages` table: `position smallint UNIQUE NOT NULL CHECK (position BETWEEN 1 AND 8)`, `slug text UNIQUE NOT NULL`, `name text NOT NULL`
-- [ ] T024 [US2] In migration `0001`, create `stage_sla` table: `stage_id uuid FK→stages UNIQUE NOT NULL`, `sla_days integer NOT NULL CHECK (sla_days >= 0)`, `updated_at timestamptz NOT NULL DEFAULT now()`
-- [ ] T025 [US2] In migration `0001`, create `vendors` table: `name text UNIQUE NOT NULL`, `tat_days integer NOT NULL CHECK (tat_days >= 0)`, `tat_anchor text NOT NULL CHECK (tat_anchor IN ('receipt','sequencing'))`, `is_active boolean NOT NULL DEFAULT true`
-- [ ] T026 [US2] In migration `0001`, create `samples` table: `case_id text UNIQUE NOT NULL` (pseudonymous; no name/MRN columns), `external_ref text NULL` (single optional minimal field), `current_stage_id uuid FK→stages NOT NULL`, `vendor_id uuid FK→vendors NULL`, `received_at timestamptz NOT NULL DEFAULT now()`, `status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','on_hold','closed'))` (FR-009, D6)
-- [ ] T027 [US2] In migration `0001`, create append-only `sample_stage_events`: `sample_id uuid FK→samples NOT NULL`, `stage_id uuid FK→stages NOT NULL`, `entered_at timestamptz NOT NULL DEFAULT now()`, `duration_hours numeric(10,2) NULL`, `actor_id uuid FK→users NOT NULL`, `note text NULL`
-- [ ] T028 [US2] In migration `0001`, create `working_calendar` (singleton; `weekend_days smallint[] NOT NULL`, default `{5}` = Friday per the Medlabs work week) and `holidays` (`day date UNIQUE NOT NULL`, `label text NULL`) tables (FR-008)
-- [ ] T029 [US2] In migration `0001`, attach `fn_reject_mutation()` `BEFORE UPDATE OR DELETE` on `sample_stage_events`
-- [ ] T030 [US2] In migration `0001`, attach `fn_audit()` triggers to `stages`, `stage_sla`, `vendors`, `samples`, `sample_stage_events` (insert), `working_calendar`, `holidays`
-- [ ] T031 [US2] In migration `0001`, seed the 8 stages (ordered, with slugs) and their default SLAs `received 1, consent_documentation 2, molecular_processing 4, data_generation 4, trf_preparation 2, trf_confirmation 1, data_conversion_qc 2, report_upload_archive 2`, and one default `working_calendar` row `weekend_days = {5}` with no holidays. Each stage's `name` keeps the full constitution label (e.g., stage 8 name = "report upload/archive/portal push", slug `report_upload_archive`)
-- [ ] T032 [US2] Add SQLAlchemy models `Stage`, `StageSla`, `Vendor`, `Sample`, `SampleStageEvent`, `WorkingCalendar`, `Holiday` to `backend/app/db/models.py`
+- [X] T023 [US2] In migration `0001`, create `stages` table: `position smallint UNIQUE NOT NULL CHECK (position BETWEEN 1 AND 8)`, `slug text UNIQUE NOT NULL`, `name text NOT NULL`
+- [X] T024 [US2] In migration `0001`, create `stage_sla` table: `stage_id uuid FK→stages UNIQUE NOT NULL`, `sla_days integer NOT NULL CHECK (sla_days >= 0)`, `updated_at timestamptz NOT NULL DEFAULT now()`
+- [X] T025 [US2] In migration `0001`, create `vendors` table: `name text UNIQUE NOT NULL`, `tat_days integer NOT NULL CHECK (tat_days >= 0)`, `tat_anchor text NOT NULL CHECK (tat_anchor IN ('receipt','sequencing'))`, `is_active boolean NOT NULL DEFAULT true`
+- [X] T026 [US2] In migration `0001`, create `samples` table: `case_id text UNIQUE NOT NULL` (pseudonymous; no name/MRN columns), `external_ref text NULL` (single optional minimal field), `current_stage_id uuid FK→stages NOT NULL`, `vendor_id uuid FK→vendors NULL`, `received_at timestamptz NOT NULL DEFAULT now()`, `status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','on_hold','closed'))` (FR-009, D6)
+- [X] T027 [US2] In migration `0001`, create append-only `sample_stage_events`: `sample_id uuid FK→samples NOT NULL`, `stage_id uuid FK→stages NOT NULL`, `entered_at timestamptz NOT NULL DEFAULT now()`, `duration_hours numeric(10,2) NULL`, `actor_id uuid FK→users NOT NULL`, `note text NULL`
+- [X] T028 [US2] In migration `0001`, create `working_calendar` (singleton; `weekend_days smallint[] NOT NULL`, default `{5}` = Friday per the Medlabs work week) and `holidays` (`day date UNIQUE NOT NULL`, `label text NULL`) tables (FR-008)
+- [X] T029 [US2] In migration `0001`, attach `fn_reject_mutation()` `BEFORE UPDATE OR DELETE` on `sample_stage_events`
+- [X] T030 [US2] In migration `0001`, attach `fn_audit()` triggers to `stages`, `stage_sla`, `vendors`, `samples`, `sample_stage_events` (insert), `working_calendar`, `holidays`
+- [X] T031 [US2] In migration `0001`, seed the 8 stages (ordered, with slugs) and their default SLAs `received 1, consent_documentation 2, molecular_processing 4, data_generation 4, trf_preparation 2, trf_confirmation 1, data_conversion_qc 2, report_upload_archive 2`, and one default `working_calendar` row `weekend_days = {5}` with no holidays. Each stage's `name` keeps the full constitution label (e.g., stage 8 name = "report upload/archive/portal push", slug `report_upload_archive`)
+- [X] T032 [US2] Add SQLAlchemy models `Stage`, `StageSla`, `Vendor`, `Sample`, `SampleStageEvent`, `WorkingCalendar`, `Holiday` to `backend/app/db/models.py`
 
 **Checkpoint**: Workflow data model and progression history provable independently.
 
@@ -113,17 +113,17 @@ description: "Task list for Database Foundation (Spec 1)"
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T033 [P] [US3] `backend/tests/db/test_rls_visibility.py`: with `app.role_names='genomics'`, `SELECT count(*) FROM samples > 0` and `FROM users / audit_log = 0`; with `app.role_names='admin'`, restricted tables return rows; with no identity set, all selects return 0 (FR-014, FR-015, SC-004)
+- [X] T033 [P] [US3] `backend/tests/db/test_rls_visibility.py`: with `app.role_names='genomics'`, `SELECT count(*) FROM samples > 0` and `FROM users / audit_log = 0`; with `app.role_names='admin'`, restricted tables return rows; with no identity set, all selects return 0 (FR-014, FR-015, SC-004)
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] In migration `0001`, create `roles` table (`slug text UNIQUE NOT NULL CHECK slug IN the 5`) and `user_roles` (`user_id FK→users ON DELETE CASCADE`, `role_id FK→roles`, `UNIQUE(user_id, role_id)`); attach `fn_audit()` triggers to both
-- [ ] T035 [US3] In migration `0001`, seed the 5 roles: `admin`, `genomics`, `trf`, `molecular`, `bioinformatics`
-- [ ] T036 [US3] In migration `0001`, create SQL helpers `app_roles()`, `is_admin()`, `has_identity()` reading `current_setting('app.role_names'/'app.user_id', true)` (research D5)
-- [ ] T037 [US3] In migration `0001`, `ENABLE` + `FORCE ROW LEVEL SECURITY` and add SELECT/write policies `USING (is_admin())` on restricted tables `users`, `roles`, `user_roles`, `audit_log` (audit_log: no app INSERT policy — written by the `SECURITY DEFINER` trigger only; mutation already trigger-blocked)
-- [ ] T038 [US3] In migration `0001`, `ENABLE` + `FORCE ROW LEVEL SECURITY` and add SELECT `USING (has_identity())` + write `WITH CHECK (has_identity())` policies on operational tables `samples`, `sample_stage_events`, `stages`, `stage_sla`, `vendors`, `working_calendar`, `holidays`, `jobs`
-- [ ] T039 [US3] In migration `0001`, `GRANT` the appropriate table/sequence privileges to the pre-existing `helixa_app` role (DML only, no DDL; the role itself is created in `infra/bootstrap-app-role.sh`, T008). Do **not** grant INSERT on `audit_log` to `helixa_app`; audit rows are written only by the `SECURITY DEFINER` `fn_audit()` owned by the superuser/BYPASSRLS role (T016), which is what lets them land under `FORCE RLS`. Add a test assertion that a *direct* `helixa_app` INSERT into `audit_log` is rejected
-- [ ] T040 [US3] Add SQLAlchemy models `Role`, `UserRole` to `backend/app/db/models.py`
+- [X] T034 [US3] In migration `0001`, create `roles` table (`slug text UNIQUE NOT NULL CHECK slug IN the 5`) and `user_roles` (`user_id FK→users ON DELETE CASCADE`, `role_id FK→roles`, `UNIQUE(user_id, role_id)`); attach `fn_audit()` triggers to both
+- [X] T035 [US3] In migration `0001`, seed the 5 roles: `admin`, `genomics`, `trf`, `molecular`, `bioinformatics`
+- [X] T036 [US3] In migration `0001`, create SQL helpers `app_roles()`, `is_admin()`, `has_identity()` reading `current_setting('app.role_names'/'app.user_id', true)` (research D5)
+- [X] T037 [US3] In migration `0001`, `ENABLE` + `FORCE ROW LEVEL SECURITY` and add SELECT/write policies `USING (is_admin())` on restricted tables `users`, `roles`, `user_roles`, `audit_log` (audit_log: no app INSERT policy — written by the `SECURITY DEFINER` trigger only; mutation already trigger-blocked)
+- [X] T038 [US3] In migration `0001`, `ENABLE` + `FORCE ROW LEVEL SECURITY` and add SELECT `USING (has_identity())` + write `WITH CHECK (has_identity())` policies on operational tables `samples`, `sample_stage_events`, `stages`, `stage_sla`, `vendors`, `working_calendar`, `holidays`, `jobs`
+- [X] T039 [US3] In migration `0001`, `GRANT` the appropriate table/sequence privileges to the pre-existing `helixa_app` role (DML only, no DDL; the role itself is created in `infra/bootstrap-app-role.sh`, T008). Do **not** grant INSERT on `audit_log` to `helixa_app`; audit rows are written only by the `SECURITY DEFINER` `fn_audit()` owned by the superuser/BYPASSRLS role (T016), which is what lets them land under `FORCE RLS`. Add a test assertion that a *direct* `helixa_app` INSERT into `audit_log` is rejected
+- [X] T040 [US3] Add SQLAlchemy models `Role`, `UserRole` to `backend/app/db/models.py`
 
 **Checkpoint**: Two-tier RLS provable; deny-by-default confirmed.
 
@@ -137,14 +137,14 @@ description: "Task list for Database Foundation (Spec 1)"
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T041 [P] [US4] `backend/tests/db/test_seed.py`: after seed there are exactly 5 roles, 8 ordered stages+SLAs, the 4 named vendors with anchors (Arcensus 4/receipt, Reviity 28/receipt, Sefdecode 5/receipt, Centogene 30/sequencing), one `system` actor, one calendar, and **zero** non-system users (FR-011, FR-012, SC-003)
-- [ ] T042 [P] [US4] `backend/tests/db/test_migration_rebuild.py`: `alembic downgrade base` then `upgrade head` leaves an identical schema with no errors (FR-016, SC-005)
+- [X] T041 [P] [US4] `backend/tests/db/test_seed.py`: after seed there are exactly 5 roles, 8 ordered stages+SLAs, the 4 named vendors with anchors (Arcensus 4/receipt, Reviity 28/receipt, Sefdecode 5/receipt, Centogene 30/sequencing), one `system` actor, one calendar, and **zero** non-system users (FR-011, FR-012, SC-003)
+- [X] T042 [P] [US4] `backend/tests/db/test_migration_rebuild.py`: `alembic downgrade base` then `upgrade head` leaves an identical schema with no errors (FR-016, SC-005)
 
 ### Implementation for User Story 4
 
-- [ ] T043 [US4] In migration `0001`, seed the 4 vendors with TAT + anchor: Arcensus `4`/`receipt`, Reviity `28`/`receipt`, Sefdecode `5`/`receipt`, Centogene `30`/`sequencing` (FR-011, D7/D8)
-- [ ] T044 [US4] In migration `0001`, implement `downgrade()` to drop all policies, triggers, functions, tables, and extensions in reverse dependency order (clean `downgrade base`). Do **not** drop the `helixa_app` role — it is owned by `infra/bootstrap-app-role.sh` (F3), not this migration; only `REVOKE`/drop the grants the migration created
-- [ ] T045 [P] [US4] Add `infra/restore-check.sh`: run `infra/backup.sh`, `pg_restore` the dump into a scratch database, and diff key table row counts against the source (SC-006); reference it from `quickstart.md` §7. **Prerequisite**: `infra/backup.sh` is an M0 deliverable — if it is absent, create a minimal `pg_dump -Fc` script here first, otherwise SC-006/FR-017 cannot be validated
+- [X] T043 [US4] In migration `0001`, seed the 4 vendors with TAT + anchor: Arcensus `4`/`receipt`, Reviity `28`/`receipt`, Sefdecode `5`/`receipt`, Centogene `30`/`sequencing` (FR-011, D7/D8)
+- [X] T044 [US4] In migration `0001`, implement `downgrade()` to drop all policies, triggers, functions, tables, and extensions in reverse dependency order (clean `downgrade base`). Do **not** drop the `helixa_app` role — it is owned by `infra/bootstrap-app-role.sh` (F3), not this migration; only `REVOKE`/drop the grants the migration created
+- [X] T045 [P] [US4] Add `infra/restore-check.sh`: run `infra/backup.sh`, `pg_restore` the dump into a scratch database, and diff key table row counts against the source (SC-006); reference it from `quickstart.md` §7. **Prerequisite**: `infra/backup.sh` is an M0 deliverable — if it is absent, create a minimal `pg_dump -Fc` script here first, otherwise SC-006/FR-017 cannot be validated
 
 **Checkpoint**: Deployable and recoverable; SC-003/005/006 green.
 
@@ -152,10 +152,10 @@ description: "Task list for Database Foundation (Spec 1)"
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T046 [P] Review and add any missing indexes (FKs, `samples.case_id`, `jobs(status, run_after)`) in migration `0001`
-- [ ] T047 [P] Write `backend/README.md`: how to run migrations, set the session context, and run the `tests/db/` suite
-- [ ] T048 Run the full `quickstart.md` validation (steps 1–8) end-to-end against the M0 Postgres and confirm every success criterion
-- [ ] T049 [P] Commit the migration, models, helpers, and tests; confirm the Alembic history is linear (single `0001` head) and `0002` is left free for Spec 4
+- [X] T046 [P] Review and add any missing indexes (FKs, `samples.case_id`, `jobs(status, run_after)`) in migration `0001`
+- [X] T047 [P] Write `backend/README.md`: how to run migrations, set the session context, and run the `tests/db/` suite
+- [X] T048 Run the full `quickstart.md` validation (steps 1–8) end-to-end against the M0 Postgres and confirm every success criterion
+- [X] T049 [P] Commit the migration, models, helpers, and tests; confirm the Alembic history is linear (single `0001` head) and `0002` is left free for Spec 4
 
 ---
 
