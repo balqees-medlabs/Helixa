@@ -68,6 +68,7 @@ class Job(Base):
         CheckConstraint(
             "status IN ('queued', 'running', 'succeeded', 'failed')", name="ck_jobs_status"
         ),
+        Index("ix_jobs_queue", "status", "run_after"),
     )
 
 
@@ -162,6 +163,7 @@ class Sample(Base):
 
     __table_args__ = (
         CheckConstraint("status IN ('active', 'on_hold', 'closed')", name="ck_samples_status"),
+        Index("ix_samples_vendor", "vendor_id"),
     )
 
 
@@ -179,6 +181,8 @@ class SampleStageEvent(Base):
     duration_hours: Mapped[float | None] = mapped_column(Numeric(10, 2))
     actor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
     note: Mapped[str | None] = mapped_column(Text)
+
+    __table_args__ = (Index("ix_sample_stage_events_sample", "sample_id", "entered_at"),)
 
 
 class WorkingCalendar(Base):
@@ -231,4 +235,7 @@ class UserRole(Base):
     )
     role_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("roles.id"), nullable=False)
 
-    __table_args__ = (UniqueConstraint("user_id", "role_id", name="uq_user_roles_user_role"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "role_id", name="uq_user_roles_user_role"),
+        Index("ix_user_roles_role", "role_id"),
+    )

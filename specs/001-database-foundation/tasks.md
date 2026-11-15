@@ -152,10 +152,10 @@ description: "Task list for Database Foundation (Spec 1)"
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T046 [P] Review and add any missing indexes (FKs, `samples.case_id`, `jobs(status, run_after)`) in migration `0001`
-- [ ] T047 [P] Write `backend/README.md`: how to run migrations, set the session context, and run the `tests/db/` suite
-- [ ] T048 Run the full `quickstart.md` validation (steps 1–8) end-to-end against the M0 Postgres and confirm every success criterion
-- [ ] T049 [P] Commit the migration, models, helpers, and tests; confirm the Alembic history is linear (single `0001` head) and `0002` is left free for Spec 4
+- [X] T046 [P] Review and add any missing indexes (FKs, `samples.case_id`, `jobs(status, run_after)`) in migration `0001`
+- [X] T047 [P] Write `backend/README.md`: how to run migrations, set the session context, and run the `tests/db/` suite
+- [X] T048 Run the full `quickstart.md` validation (steps 1–8) end-to-end against the M0 Postgres and confirm every success criterion
+- [X] T049 [P] Commit the migration, models, helpers, and tests; confirm the Alembic history is linear (single `0001` head) and `0002` is left free for Spec 4
 
 ---
 

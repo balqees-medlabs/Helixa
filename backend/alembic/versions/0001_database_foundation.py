@@ -383,6 +383,16 @@ TO helixa_app;
 
 # --- US4: reference data and reproducibility (T043) ---------------------------
 
+# Hot-path indexes (T046): the worker's queue lookup, the vendor FK, the
+# stage-event history lookup used by fn_stage_event_duration(), and the
+# user_roles FK for role-side deletes.
+CREATE_INDEXES = r"""
+CREATE INDEX ix_jobs_queue ON jobs (status, run_after);
+CREATE INDEX ix_samples_vendor ON samples (vendor_id);
+CREATE INDEX ix_sample_stage_events_sample ON sample_stage_events (sample_id, entered_at);
+CREATE INDEX ix_user_roles_role ON user_roles (role_id);
+"""
+
 # The 4 named external vendors with their turnaround targets and clocks
 # (FR-011, D7/D8): Centogene's TAT is counted from sequencing, the rest from
 # receipt. Seeded audited under the system actor; admin-editable afterwards.
@@ -503,6 +513,9 @@ def upgrade() -> None:
     for table in OPERATIONAL_TABLES:
         op.execute(RLS_OPERATIONAL_TEMPLATE.format(t=table))
     op.execute(GRANTS_APP_ROLE)
+
+    # --- hot-path indexes (T046) ---------------------------------------------
+    op.execute(CREATE_INDEXES)
 
 
 def downgrade() -> None:
