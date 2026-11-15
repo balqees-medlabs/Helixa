@@ -113,17 +113,17 @@ description: "Task list for Database Foundation (Spec 1)"
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T033 [P] [US3] `backend/tests/db/test_rls_visibility.py`: with `app.role_names='genomics'`, `SELECT count(*) FROM samples > 0` and `FROM users / audit_log = 0`; with `app.role_names='admin'`, restricted tables return rows; with no identity set, all selects return 0 (FR-014, FR-015, SC-004)
+- [X] T033 [P] [US3] `backend/tests/db/test_rls_visibility.py`: with `app.role_names='genomics'`, `SELECT count(*) FROM samples > 0` and `FROM users / audit_log = 0`; with `app.role_names='admin'`, restricted tables return rows; with no identity set, all selects return 0 (FR-014, FR-015, SC-004)
 
 ### Implementation for User Story 3
 
-- [ ] T034 [US3] In migration `0001`, create `roles` table (`slug text UNIQUE NOT NULL CHECK slug IN the 5`) and `user_roles` (`user_id FK→users ON DELETE CASCADE`, `role_id FK→roles`, `UNIQUE(user_id, role_id)`); attach `fn_audit()` triggers to both
-- [ ] T035 [US3] In migration `0001`, seed the 5 roles: `admin`, `genomics`, `trf`, `molecular`, `bioinformatics`
-- [ ] T036 [US3] In migration `0001`, create SQL helpers `app_roles()`, `is_admin()`, `has_identity()` reading `current_setting('app.role_names'/'app.user_id', true)` (research D5)
-- [ ] T037 [US3] In migration `0001`, `ENABLE` + `FORCE ROW LEVEL SECURITY` and add SELECT/write policies `USING (is_admin())` on restricted tables `users`, `roles`, `user_roles`, `audit_log` (audit_log: no app INSERT policy — written by the `SECURITY DEFINER` trigger only; mutation already trigger-blocked)
-- [ ] T038 [US3] In migration `0001`, `ENABLE` + `FORCE ROW LEVEL SECURITY` and add SELECT `USING (has_identity())` + write `WITH CHECK (has_identity())` policies on operational tables `samples`, `sample_stage_events`, `stages`, `stage_sla`, `vendors`, `working_calendar`, `holidays`, `jobs`
-- [ ] T039 [US3] In migration `0001`, `GRANT` the appropriate table/sequence privileges to the pre-existing `helixa_app` role (DML only, no DDL; the role itself is created in `infra/bootstrap-app-role.sh`, T008). Do **not** grant INSERT on `audit_log` to `helixa_app`; audit rows are written only by the `SECURITY DEFINER` `fn_audit()` owned by the superuser/BYPASSRLS role (T016), which is what lets them land under `FORCE RLS`. Add a test assertion that a *direct* `helixa_app` INSERT into `audit_log` is rejected
-- [ ] T040 [US3] Add SQLAlchemy models `Role`, `UserRole` to `backend/app/db/models.py`
+- [X] T034 [US3] In migration `0001`, create `roles` table (`slug text UNIQUE NOT NULL CHECK slug IN the 5`) and `user_roles` (`user_id FK→users ON DELETE CASCADE`, `role_id FK→roles`, `UNIQUE(user_id, role_id)`); attach `fn_audit()` triggers to both
+- [X] T035 [US3] In migration `0001`, seed the 5 roles: `admin`, `genomics`, `trf`, `molecular`, `bioinformatics`
+- [X] T036 [US3] In migration `0001`, create SQL helpers `app_roles()`, `is_admin()`, `has_identity()` reading `current_setting('app.role_names'/'app.user_id', true)` (research D5)
+- [X] T037 [US3] In migration `0001`, `ENABLE` + `FORCE ROW LEVEL SECURITY` and add SELECT/write policies `USING (is_admin())` on restricted tables `users`, `roles`, `user_roles`, `audit_log` (audit_log: no app INSERT policy — written by the `SECURITY DEFINER` trigger only; mutation already trigger-blocked)
+- [X] T038 [US3] In migration `0001`, `ENABLE` + `FORCE ROW LEVEL SECURITY` and add SELECT `USING (has_identity())` + write `WITH CHECK (has_identity())` policies on operational tables `samples`, `sample_stage_events`, `stages`, `stage_sla`, `vendors`, `working_calendar`, `holidays`, `jobs`
+- [X] T039 [US3] In migration `0001`, `GRANT` the appropriate table/sequence privileges to the pre-existing `helixa_app` role (DML only, no DDL; the role itself is created in `infra/bootstrap-app-role.sh`, T008). Do **not** grant INSERT on `audit_log` to `helixa_app`; audit rows are written only by the `SECURITY DEFINER` `fn_audit()` owned by the superuser/BYPASSRLS role (T016), which is what lets them land under `FORCE RLS`. Add a test assertion that a *direct* `helixa_app` INSERT into `audit_log` is rejected
+- [X] T040 [US3] Add SQLAlchemy models `Role`, `UserRole` to `backend/app/db/models.py`
 
 **Checkpoint**: Two-tier RLS provable; deny-by-default confirmed.
 
@@ -137,14 +137,14 @@ description: "Task list for Database Foundation (Spec 1)"
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T041 [P] [US4] `backend/tests/db/test_seed.py`: after seed there are exactly 5 roles, 8 ordered stages+SLAs, the 4 named vendors with anchors (Arcensus 4/receipt, Reviity 28/receipt, Sefdecode 5/receipt, Centogene 30/sequencing), one `system` actor, one calendar, and **zero** non-system users (FR-011, FR-012, SC-003)
-- [ ] T042 [P] [US4] `backend/tests/db/test_migration_rebuild.py`: `alembic downgrade base` then `upgrade head` leaves an identical schema with no errors (FR-016, SC-005)
+- [X] T041 [P] [US4] `backend/tests/db/test_seed.py`: after seed there are exactly 5 roles, 8 ordered stages+SLAs, the 4 named vendors with anchors (Arcensus 4/receipt, Reviity 28/receipt, Sefdecode 5/receipt, Centogene 30/sequencing), one `system` actor, one calendar, and **zero** non-system users (FR-011, FR-012, SC-003)
+- [X] T042 [P] [US4] `backend/tests/db/test_migration_rebuild.py`: `alembic downgrade base` then `upgrade head` leaves an identical schema with no errors (FR-016, SC-005)
 
 ### Implementation for User Story 4
 
-- [ ] T043 [US4] In migration `0001`, seed the 4 vendors with TAT + anchor: Arcensus `4`/`receipt`, Reviity `28`/`receipt`, Sefdecode `5`/`receipt`, Centogene `30`/`sequencing` (FR-011, D7/D8)
-- [ ] T044 [US4] In migration `0001`, implement `downgrade()` to drop all policies, triggers, functions, tables, and extensions in reverse dependency order (clean `downgrade base`). Do **not** drop the `helixa_app` role — it is owned by `infra/bootstrap-app-role.sh` (F3), not this migration; only `REVOKE`/drop the grants the migration created
-- [ ] T045 [P] [US4] Add `infra/restore-check.sh`: run `infra/backup.sh`, `pg_restore` the dump into a scratch database, and diff key table row counts against the source (SC-006); reference it from `quickstart.md` §7. **Prerequisite**: `infra/backup.sh` is an M0 deliverable — if it is absent, create a minimal `pg_dump -Fc` script here first, otherwise SC-006/FR-017 cannot be validated
+- [X] T043 [US4] In migration `0001`, seed the 4 vendors with TAT + anchor: Arcensus `4`/`receipt`, Reviity `28`/`receipt`, Sefdecode `5`/`receipt`, Centogene `30`/`sequencing` (FR-011, D7/D8)
+- [X] T044 [US4] In migration `0001`, implement `downgrade()` to drop all policies, triggers, functions, tables, and extensions in reverse dependency order (clean `downgrade base`). Do **not** drop the `helixa_app` role — it is owned by `infra/bootstrap-app-role.sh` (F3), not this migration; only `REVOKE`/drop the grants the migration created
+- [X] T045 [P] [US4] Add `infra/restore-check.sh`: run `infra/backup.sh`, `pg_restore` the dump into a scratch database, and diff key table row counts against the source (SC-006); reference it from `quickstart.md` §7. **Prerequisite**: `infra/backup.sh` is an M0 deliverable — if it is absent, create a minimal `pg_dump -Fc` script here first, otherwise SC-006/FR-017 cannot be validated
 
 **Checkpoint**: Deployable and recoverable; SC-003/005/006 green.
 

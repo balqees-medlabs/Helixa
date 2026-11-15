@@ -99,6 +99,10 @@ pg_restore -d helixa_restore_check /data/backups/helixa-<ts>.dump
 # compare row counts of key tables between source and restore
 ```
 
+Or in one step — `infra/restore-check.sh` runs the backup, restores it into a
+scratch database (`RESTORE_DB`, default `helixa_restore_check`), and diffs the
+row counts of every table against the source, failing on any mismatch.
+
 **Expect**: restore succeeds; seed + test rows match the source.
 
 ## 8. Verify clean rebuild  → SC-005, FR-016
