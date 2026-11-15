@@ -1,26 +1,28 @@
 """SQLAlchemy models for the Spec 1 data layer.
 
 Field-for-field mirrors of the schema created by migration
-``0001_database_foundation``; no business logic lives here. Only tables that
-exist in the migration are modelled — later phases add ``Role``/``UserRole``
-(US3) and the workflow tables (US2).
+``0001_database_foundation``; no business logic lives here. Later phases add
+``Role``/``UserRole`` (US3).
 """
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     Index,
     Integer,
+    Numeric,
+    SmallInteger,
     String,
     Text,
     text,
 )
-from sqlalchemy.dialects.postgresql import CITEXT, JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, CITEXT, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -90,3 +92,108 @@ class AuditLog(Base):
         Index("ix_audit_log_entity", "entity_table", "entity_id"),
         Index("ix_audit_log_at", "at"),
     )
+
+
+# --- US2: workflow model and sample progression -------------------------------
+
+
+class Stage(Base):
+    __tablename__ = "stages"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    position: Mapped[int] = mapped_column(SmallInteger, nullable=False, unique=True)
+    slug: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+
+    __table_args__ = (CheckConstraint("position BETWEEN 1 AND 8", name="ck_stages_position"),)
+
+
+class StageSla(Base):
+    __tablename__ = "stage_sla"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    stage_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("stages.id"), nullable=False, unique=True
+    )
+    sla_days: Mapped[int] = mapped_column(Integer, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (CheckConstraint("sla_days >= 0", name="ck_stage_sla_days"),)
+
+
+class Vendor(Base):
+    __tablename__ = "vendors"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    tat_days: Mapped[int] = mapped_column(Integer, nullable=False)
+    tat_anchor: Mapped[str] = mapped_column(String, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+
+    __table_args__ = (
+        CheckConstraint("tat_days >= 0", name="ck_vendors_tat_days"),
+        CheckConstraint("tat_anchor IN ('receipt', 'sequencing')", name="ck_vendors_tat_anchor"),
+    )
+
+
+class Sample(Base):
+    __tablename__ = "samples"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    case_id: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    external_ref: Mapped[str | None] = mapped_column(Text)
+    current_stage_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("stages.id"), nullable=False)
+    vendor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("vendors.id"))
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    status: Mapped[str] = mapped_column(String, nullable=False, server_default=text("'active'"))
+
+    __table_args__ = (
+        CheckConstraint("status IN ('active', 'on_hold', 'closed')", name="ck_samples_status"),
+    )
+
+
+class SampleStageEvent(Base):
+    __tablename__ = "sample_stage_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    sample_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("samples.id"), nullable=False)
+    stage_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("stages.id"), nullable=False)
+    entered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    duration_hours: Mapped[float | None] = mapped_column(Numeric(10, 2))
+    actor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    note: Mapped[str | None] = mapped_column(Text)
+
+
+class WorkingCalendar(Base):
+    __tablename__ = "working_calendar"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    weekend_days: Mapped[list[int]] = mapped_column(ARRAY(SmallInteger), nullable=False)
+
+
+class Holiday(Base):
+    __tablename__ = "holidays"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    day: Mapped[date] = mapped_column(Date, nullable=False, unique=True)
+    label: Mapped[str | None] = mapped_column(Text)

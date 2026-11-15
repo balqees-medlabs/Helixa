@@ -85,21 +85,21 @@ description: "Task list for Database Foundation (Spec 1)"
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T021 [P] [US2] `backend/tests/db/test_workflow.py`: advancing a sample inserts a `sample_stage_events` row with `duration_hours`; UPDATE/DELETE on `sample_stage_events` raise (FR-003); changing `stage_sla.sla_days` does not alter past `duration_hours` (FR-006); inserting a duplicate `samples.case_id` is rejected (FR-009, SC-007)
-- [ ] T022 [P] [US2] `backend/tests/db/test_stages_seed.py`: exactly 8 stages with `position` 1..8 unique and the default SLA split `1,2,4,4,2,1,2,2` (Σ=18); one default `working_calendar` with `weekend_days = {5}` (Friday) (FR-005, FR-006, FR-008)
+- [X] T021 [P] [US2] `backend/tests/db/test_workflow.py`: advancing a sample inserts a `sample_stage_events` row with `duration_hours`; UPDATE/DELETE on `sample_stage_events` raise (FR-003); changing `stage_sla.sla_days` does not alter past `duration_hours` (FR-006); inserting a duplicate `samples.case_id` is rejected (FR-009, SC-007)
+- [X] T022 [P] [US2] `backend/tests/db/test_stages_seed.py`: exactly 8 stages with `position` 1..8 unique and the default SLA split `1,2,4,4,2,1,2,2` (Σ=18); one default `working_calendar` with `weekend_days = {5}` (Friday) (FR-005, FR-006, FR-008)
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] In migration `0001`, create `stages` table: `position smallint UNIQUE NOT NULL CHECK (position BETWEEN 1 AND 8)`, `slug text UNIQUE NOT NULL`, `name text NOT NULL`
-- [ ] T024 [US2] In migration `0001`, create `stage_sla` table: `stage_id uuid FK→stages UNIQUE NOT NULL`, `sla_days integer NOT NULL CHECK (sla_days >= 0)`, `updated_at timestamptz NOT NULL DEFAULT now()`
-- [ ] T025 [US2] In migration `0001`, create `vendors` table: `name text UNIQUE NOT NULL`, `tat_days integer NOT NULL CHECK (tat_days >= 0)`, `tat_anchor text NOT NULL CHECK (tat_anchor IN ('receipt','sequencing'))`, `is_active boolean NOT NULL DEFAULT true`
-- [ ] T026 [US2] In migration `0001`, create `samples` table: `case_id text UNIQUE NOT NULL` (pseudonymous; no name/MRN columns), `external_ref text NULL` (single optional minimal field), `current_stage_id uuid FK→stages NOT NULL`, `vendor_id uuid FK→vendors NULL`, `received_at timestamptz NOT NULL DEFAULT now()`, `status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','on_hold','closed'))` (FR-009, D6)
-- [ ] T027 [US2] In migration `0001`, create append-only `sample_stage_events`: `sample_id uuid FK→samples NOT NULL`, `stage_id uuid FK→stages NOT NULL`, `entered_at timestamptz NOT NULL DEFAULT now()`, `duration_hours numeric(10,2) NULL`, `actor_id uuid FK→users NOT NULL`, `note text NULL`
-- [ ] T028 [US2] In migration `0001`, create `working_calendar` (singleton; `weekend_days smallint[] NOT NULL`, default `{5}` = Friday per the Medlabs work week) and `holidays` (`day date UNIQUE NOT NULL`, `label text NULL`) tables (FR-008)
-- [ ] T029 [US2] In migration `0001`, attach `fn_reject_mutation()` `BEFORE UPDATE OR DELETE` on `sample_stage_events`
-- [ ] T030 [US2] In migration `0001`, attach `fn_audit()` triggers to `stages`, `stage_sla`, `vendors`, `samples`, `sample_stage_events` (insert), `working_calendar`, `holidays`
-- [ ] T031 [US2] In migration `0001`, seed the 8 stages (ordered, with slugs) and their default SLAs `received 1, consent_documentation 2, molecular_processing 4, data_generation 4, trf_preparation 2, trf_confirmation 1, data_conversion_qc 2, report_upload_archive 2`, and one default `working_calendar` row `weekend_days = {5}` with no holidays. Each stage's `name` keeps the full constitution label (e.g., stage 8 name = "report upload/archive/portal push", slug `report_upload_archive`)
-- [ ] T032 [US2] Add SQLAlchemy models `Stage`, `StageSla`, `Vendor`, `Sample`, `SampleStageEvent`, `WorkingCalendar`, `Holiday` to `backend/app/db/models.py`
+- [X] T023 [US2] In migration `0001`, create `stages` table: `position smallint UNIQUE NOT NULL CHECK (position BETWEEN 1 AND 8)`, `slug text UNIQUE NOT NULL`, `name text NOT NULL`
+- [X] T024 [US2] In migration `0001`, create `stage_sla` table: `stage_id uuid FK→stages UNIQUE NOT NULL`, `sla_days integer NOT NULL CHECK (sla_days >= 0)`, `updated_at timestamptz NOT NULL DEFAULT now()`
+- [X] T025 [US2] In migration `0001`, create `vendors` table: `name text UNIQUE NOT NULL`, `tat_days integer NOT NULL CHECK (tat_days >= 0)`, `tat_anchor text NOT NULL CHECK (tat_anchor IN ('receipt','sequencing'))`, `is_active boolean NOT NULL DEFAULT true`
+- [X] T026 [US2] In migration `0001`, create `samples` table: `case_id text UNIQUE NOT NULL` (pseudonymous; no name/MRN columns), `external_ref text NULL` (single optional minimal field), `current_stage_id uuid FK→stages NOT NULL`, `vendor_id uuid FK→vendors NULL`, `received_at timestamptz NOT NULL DEFAULT now()`, `status text NOT NULL DEFAULT 'active' CHECK (status IN ('active','on_hold','closed'))` (FR-009, D6)
+- [X] T027 [US2] In migration `0001`, create append-only `sample_stage_events`: `sample_id uuid FK→samples NOT NULL`, `stage_id uuid FK→stages NOT NULL`, `entered_at timestamptz NOT NULL DEFAULT now()`, `duration_hours numeric(10,2) NULL`, `actor_id uuid FK→users NOT NULL`, `note text NULL`
+- [X] T028 [US2] In migration `0001`, create `working_calendar` (singleton; `weekend_days smallint[] NOT NULL`, default `{5}` = Friday per the Medlabs work week) and `holidays` (`day date UNIQUE NOT NULL`, `label text NULL`) tables (FR-008)
+- [X] T029 [US2] In migration `0001`, attach `fn_reject_mutation()` `BEFORE UPDATE OR DELETE` on `sample_stage_events`
+- [X] T030 [US2] In migration `0001`, attach `fn_audit()` triggers to `stages`, `stage_sla`, `vendors`, `samples`, `sample_stage_events` (insert), `working_calendar`, `holidays`
+- [X] T031 [US2] In migration `0001`, seed the 8 stages (ordered, with slugs) and their default SLAs `received 1, consent_documentation 2, molecular_processing 4, data_generation 4, trf_preparation 2, trf_confirmation 1, data_conversion_qc 2, report_upload_archive 2`, and one default `working_calendar` row `weekend_days = {5}` with no holidays. Each stage's `name` keeps the full constitution label (e.g., stage 8 name = "report upload/archive/portal push", slug `report_upload_archive`)
+- [X] T032 [US2] Add SQLAlchemy models `Stage`, `StageSla`, `Vendor`, `Sample`, `SampleStageEvent`, `WorkingCalendar`, `Holiday` to `backend/app/db/models.py`
 
 **Checkpoint**: Workflow data model and progression history provable independently.
 
