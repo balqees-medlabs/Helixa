@@ -23,10 +23,10 @@ description: "Task list for Backend API (Spec 2)"
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 Add backend API dependencies to `backend/pyproject.toml`: `fastapi`, `uvicorn[standard]`, `pydantic-settings`, `argon2-cffi`, `pyjwt`, and dev `httpx` (TestClient); keep SQLAlchemy/Alembic/psycopg from Spec 1
-- [ ] T002 [P] Create `backend/app/core/config.py` — Pydantic `Settings` reading from `.env`: `DATABASE_URL`, `APP_DB_USER/PASSWORD`, `JWT_SECRET`, `ACCESS_TTL_MIN` (default 15), `REFRESH_IDLE_H` (default 12), `REFRESH_ABSOLUTE_D` (default 7), `REPORTS_ROOT` (default `/data/reports`), `REPORT_MAX_BYTES` (default 52428800), `REPORT_ALLOWED_TYPES` (default `application/pdf`), `PORTAL_BASE_URL`/`PORTAL_TOKEN` (optional)
-- [ ] T003 [P] Add API env keys to `infra/.env.example` (JWT_SECRET, REPORTS_ROOT, session TTLs, REPORT_*, PORTAL_*)
-- [ ] T004 Create `backend/app/main.py` — FastAPI app with OpenAPI metadata and a health route; routers registered in later phases. Document the internal-only bind (serve via `uvicorn --host 127.0.0.1`, fronted by Caddy from M0) so the backend never listens on the LAN interface directly (FR-021)
+- [X] T001 Add backend API dependencies to `backend/pyproject.toml`: `fastapi`, `uvicorn[standard]`, `pydantic-settings`, `argon2-cffi`, `pyjwt`, and dev `httpx` (TestClient); keep SQLAlchemy/Alembic/psycopg from Spec 1
+- [X] T002 [P] Create `backend/app/core/config.py` — Pydantic `Settings` reading from `.env`: `DATABASE_URL`, `APP_DB_USER/PASSWORD`, `JWT_SECRET`, `ACCESS_TTL_MIN` (default 15), `REFRESH_IDLE_H` (default 12), `REFRESH_ABSOLUTE_D` (default 7), `REPORTS_ROOT` (default `/data/reports`), `REPORT_MAX_BYTES` (default 52428800), `REPORT_ALLOWED_TYPES` (default `application/pdf`), `PORTAL_BASE_URL`/`PORTAL_TOKEN` (optional)
+- [X] T003 [P] Add API env keys to `infra/.env.example` (JWT_SECRET, REPORTS_ROOT, session TTLs, REPORT_*, PORTAL_*)
+- [X] T004 Create `backend/app/main.py` — FastAPI app with OpenAPI metadata and a health route; routers registered in later phases. Document the internal-only bind (serve via `uvicorn --host 127.0.0.1`, fronted by Caddy from M0) so the backend never listens on the LAN interface directly (FR-021)
 
 **Checkpoint**: app imports and serves `/health`.
 
