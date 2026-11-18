@@ -1,0 +1,39 @@
+{
+  "root": true,
+  "extends": ["next/core-web-vitals", "prettier"],
+  "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "CallExpression[callee.name='fetch']",
+        "message": "Do not call fetch directly. Use apiFetch / the generated client in lib/api (contract-only API access)."
+      },
+      {
+        "selector": "CallExpression[callee.name='XMLHttpRequest']",
+        "message": "Do not open raw HTTP requests. Use apiFetch / the generated client in lib/api."
+      },
+      {
+        "selector": "CallExpression[callee.object.name='window'][callee.property.name='fetch']",
+        "message": "Do not call window.fetch directly. Use apiFetch / the generated client in lib/api."
+      },
+      {
+        "selector": "Literal[value=/^\\/api\\//]",
+        "message": "Do not hand-write API URLs. Import typed operations from the generated client (lib/api/schema)."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["lib/api/client.ts"],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    },
+    {
+      "files": ["tests/**/*", "e2e/**/*"],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    }
+  ]
+}
