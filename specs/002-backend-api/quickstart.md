@@ -40,7 +40,7 @@ python -m app.worker          # separate process: portal_push jobs
 ## 6. Reports & portal  → SC-006/007
 - Upload a non-PDF → `415`; oversize → `413`; valid PDF for a QC-passed sample → stored (+ `portal_pushes` queued).
 - Unauthorized role GETs the file → `403`/`404`.
-- With the mock set to fail once: worker marks the push `failed`; `retry` → `success`, `delivered_at` set, no duplicate; sample `status='closed'`.
+- With the mock set to fail once: the worker records the error and auto-retries with backoff (push stays `queued` under the attempt cap, case stays open); the next worker run succeeds, `delivered_at` is set, no duplicate, sample `status='closed'`. A push that reaches the attempt cap stays `failed`; `POST /portal-pushes/{id}/retry` re-queues it only while under the cap.
 
 ## 7. Contract & audit  → SC-003/008
 - Export OpenAPI (`python -m app.cli export-openapi`) → matches the committed `openapi.json` (no drift).
