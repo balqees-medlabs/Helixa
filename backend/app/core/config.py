@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     # Portal (optional until Spec 2 integration is live)
     PORTAL_BASE_URL: str | None = None
     PORTAL_TOKEN: str | None = None
+    PORTAL_MAX_ATTEMPTS: int = 5
+    PORTAL_RETRY_BACKOFF_SEC: int = 60
 
     @property
     def report_allowed_types(self) -> frozenset[str]:

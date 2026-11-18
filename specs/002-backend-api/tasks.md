@@ -135,16 +135,16 @@ description: "Task list for Backend API (Spec 2)"
 
 ### Tests ⚠️
 
-- [ ] T043 [P] [US4] `backend/tests/api/test_reports.py` — QC-gate 409, type 415, size 413, stored with sha256, metadata+file retrievable by admin/bioinformatics/genomics and refused (403) for trf/molecular (SC-007)
-- [ ] T044 [P] [US4] `backend/tests/api/test_portal_push.py` — mock push fails then retry → success, `delivered_at` set, no duplicate (UNIQUE report_id), sample `status='closed'` only after success (SC-006/009)
+- [X] T043 [P] [US4] `backend/tests/api/test_reports.py` — QC-gate 409, type 415, size 413, stored with sha256, metadata+file retrievable by admin/bioinformatics/genomics and refused (403) for trf/molecular (SC-007)
+- [X] T044 [P] [US4] `backend/tests/api/test_portal_push.py` — mock push fails then retry → success, `delivered_at` set, no duplicate (UNIQUE report_id), sample `status='closed'` only after success (SC-006/009)
 
 ### Implementation
 
-- [ ] T045 [US4] `backend/app/services/portal_client.py` — single `PortalClient` interface with a default **mock** implementation (configurable failure for tests); real HTTP impl stubbed behind the same interface, `PORTAL_*` from config (FR-018)
-- [ ] T046 [US4] `backend/app/services/report_service.py` — validate QC gate + type allowlist + max size before writing; stream to `REPORTS_ROOT/<case_id>/<uuid>-<filename>`, compute sha256, write `reports` row, create `portal_pushes` (queued) + enqueue a `jobs` row `kind='portal_push'`
-- [ ] T047 [US4] `backend/app/api/reports.py` — `POST /samples/{id}/report` (multipart), `GET /reports/{id}`, `GET /reports/{id}/file` (streamed, RBAC+RLS), `GET /portal-pushes/{id}`, `POST /portal-pushes/{id}/retry`
-- [ ] T048 [US4] `backend/app/worker.py` — jobs worker: lease `portal_push` jobs, set system actor + `app.job_id`, call `PortalClient.push`; success → `status='success'`, `delivered_at`, close the case; failure → `status='failed'`, backoff `next_attempt_at`, retry to a cap; idempotent on delivered pushes
-- [ ] T049 [US4] Register the reports router in `backend/app/main.py`
+- [X] T045 [US4] `backend/app/services/portal_client.py` — single `PortalClient` interface with a default **mock** implementation (configurable failure for tests); real HTTP impl stubbed behind the same interface, `PORTAL_*` from config (FR-018)
+- [X] T046 [US4] `backend/app/services/report_service.py` — validate QC gate + type allowlist + max size before writing; stream to `REPORTS_ROOT/<case_id>/<uuid>-<filename>`, compute sha256, write `reports` row, create `portal_pushes` (queued) + enqueue a `jobs` row `kind='portal_push'`
+- [X] T047 [US4] `backend/app/api/reports.py` — `POST /samples/{id}/report` (multipart), `GET /reports/{id}`, `GET /reports/{id}/file` (streamed, RBAC+RLS), `GET /portal-pushes/{id}`, `POST /portal-pushes/{id}/retry`
+- [X] T048 [US4] `backend/app/worker.py` — jobs worker: lease `portal_push` jobs, set system actor + `app.job_id`, call `PortalClient.push`; success → `status='success'`, `delivered_at`, close the case; failure → `status='failed'`, backoff `next_attempt_at`, retry to a cap; idempotent on delivered pushes
+- [X] T049 [US4] Register the reports router in `backend/app/main.py`
 
 **Checkpoint**: end-to-end path complete; results reach the portal reliably.
 

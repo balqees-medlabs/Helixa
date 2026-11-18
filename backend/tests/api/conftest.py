@@ -22,7 +22,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from app.core import deps
-from app.core.config import Settings
+from app.core.config import Settings, reset_cached_settings
 from app.core.security import ACCESS_COOKIE, encode_access_token, hash_password
 from app.db.session_context import set_session_context
 from app.main import app
@@ -200,3 +200,14 @@ def make_signed_client(_user_factory) -> Callable[..., TestClient]:
 def app_settings(database_url: str) -> Settings:
     """The effective test settings (env DATABASE_URL, test JWT secret)."""
     return Settings()
+
+
+@pytest.fixture()
+def reports_root(tmp_path, monkeypatch) -> Iterator:
+    """Isolate report files and keep the upload cap small for tests."""
+    root = tmp_path / "reports"
+    monkeypatch.setenv("REPORTS_ROOT", str(root))
+    monkeypatch.setenv("REPORT_MAX_BYTES", "1024")
+    reset_cached_settings()
+    yield root
+    reset_cached_settings()

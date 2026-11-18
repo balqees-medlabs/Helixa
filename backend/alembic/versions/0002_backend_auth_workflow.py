@@ -239,6 +239,19 @@ END;
 $fn$;
 """
 
+# The jobs worker has no human session but must attribute its writes to the
+# seeded system actor. users is admin-only under RLS, so expose just that id
+# through a definer function (never the row or credentials).
+FN_SYSTEM_ACTOR_ID = r"""
+CREATE OR REPLACE FUNCTION fn_system_actor_id() RETURNS uuid
+LANGUAGE sql STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $fn$
+    SELECT id FROM users WHERE is_system LIMIT 1
+$fn$;
+"""
+
 SECURE_FUNCTIONS = r"""
 REVOKE ALL ON FUNCTION fn_auth_user(uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION fn_auth_user(uuid, text) TO helixa_app;
@@ -246,6 +259,8 @@ REVOKE ALL ON FUNCTION fn_auth_refresh_lookup(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION fn_auth_refresh_lookup(text) TO helixa_app;
 REVOKE ALL ON FUNCTION fn_auth_touch_login(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION fn_auth_touch_login(uuid) TO helixa_app;
+REVOKE ALL ON FUNCTION fn_system_actor_id() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION fn_system_actor_id() TO helixa_app;
 """
 
 
@@ -281,6 +296,7 @@ def upgrade() -> None:
     op.execute(FN_AUTH_USER)
     op.execute(FN_AUTH_REFRESH_LOOKUP)
     op.execute(FN_AUTH_TOUCH_LOGIN)
+    op.execute(FN_SYSTEM_ACTOR_ID)
     op.execute(SECURE_FUNCTIONS)
 
 
@@ -288,6 +304,7 @@ def downgrade() -> None:
     # Reverse order (T015): functions, then triggers, then tables (policies and
     # grants vanish with their tables), then the users auth columns. The
     # helixa_app role is NOT dropped — owned by infra/bootstrap-app-role.sh.
+    op.execute("DROP FUNCTION IF EXISTS fn_system_actor_id()")
     op.execute("DROP FUNCTION IF EXISTS fn_auth_touch_login(uuid)")
     op.execute("DROP FUNCTION IF EXISTS fn_auth_refresh_lookup(text)")
     op.execute("DROP FUNCTION IF EXISTS fn_auth_user(uuid, text)")

@@ -12,6 +12,7 @@ dependencies = [
     "pydantic-settings>=2.0",
     "argon2-cffi>=23.0",
     "pyjwt>=2.9",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
