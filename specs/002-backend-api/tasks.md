@@ -111,17 +111,17 @@ description: "Task list for Backend API (Spec 2)"
 
 ### Tests ⚠️
 
-- [ ] T035 [P] [US3] `backend/tests/api/test_batches.py` — batch stage-advance applies per member with gates enforced individually; a failing member does not block others (FR-012)
-- [ ] T036 [P] [US3] `backend/tests/api/test_qc_and_metrics.py` — QC pass/fail controls the report gate; `GET /metrics/tat` matches recorded durations; `PATCH` stage SLA changes future only, past durations unchanged (SC-005); vendor TAT by anchor (FR-014)
+- [X] T035 [P] [US3] `backend/tests/api/test_batches.py` — batch stage-advance applies per member with gates enforced individually; a failing member does not block others (FR-012)
+- [X] T036 [P] [US3] `backend/tests/api/test_qc_and_metrics.py` — QC pass/fail controls the report gate; `GET /metrics/tat` matches recorded durations; `PATCH` stage SLA changes future only, past durations unchanged (SC-005); vendor TAT by anchor (FR-014)
 
 ### Implementation
 
-- [ ] T037 [US3] `backend/app/services/qc_service.py` — record `qc_results` rows (`kind` ∈ `data_generation`|`qc`, `passed`, `detail`); QC pass is the report gate (FR-013)
-- [ ] T038 [US3] `backend/app/services/batch_service.py` — create batches, add members, batch-advance: advance each member in its **own savepoint** (`conn.begin_nested()`) so one member's 409/gate failure rolls back only that member and the others still commit (FR-012 — a failing member must not block the rest); collect a per-member result/conflict/gate-reason list by reusing `workflow_service.advance`; assignment is the only other batch operation
-- [ ] T039 [US3] `backend/app/services/sla_service.py` — compute internal TAT vs per-stage SLAs and the 18-day target using the Spec 1 working calendar; per-vendor TAT by `tat_anchor` (`receipt`|`sequencing`) (FR-014/015)
-- [ ] T040 [P] [US3] `backend/app/api/qc.py` (`POST /samples/{id}/qc`) and `backend/app/api/batches.py` (`POST /batches`, `POST /batches/{id}/members`, `POST /batches/{id}/advance`)
-- [ ] T041 [P] [US3] `backend/app/api/vendors.py` (`GET/POST /vendors`, `PATCH /vendors/{id}`) and `backend/app/api/metrics.py` (`GET /metrics/tat`, `PATCH /stages/{id}/sla`)
-- [ ] T042 [US3] Register the qc/batches/vendors/metrics routers in `backend/app/main.py`
+- [X] T037 [US3] `backend/app/services/qc_service.py` — record `qc_results` rows (`kind` ∈ `data_generation`|`qc`, `passed`, `detail`); QC pass is the report gate (FR-013)
+- [X] T038 [US3] `backend/app/services/batch_service.py` — create batches, add members, batch-advance: advance each member in its **own savepoint** (`conn.begin_nested()`) so one member's 409/gate failure rolls back only that member and the others still commit (FR-012 — a failing member must not block the rest); collect a per-member result/conflict/gate-reason list by reusing `workflow_service.advance`; assignment is the only other batch operation
+- [X] T039 [US3] `backend/app/services/sla_service.py` — compute internal TAT vs per-stage SLAs and the 18-day target using the Spec 1 working calendar; per-vendor TAT by `tat_anchor` (`receipt`|`sequencing`) (FR-014/015)
+- [X] T040 [P] [US3] `backend/app/api/qc.py` (`POST /samples/{id}/qc`) and `backend/app/api/batches.py` (`POST /batches`, `POST /batches/{id}/members`, `POST /batches/{id}/advance`)
+- [X] T041 [P] [US3] `backend/app/api/vendors.py` (`GET/POST /vendors`, `PATCH /vendors/{id}`) and `backend/app/api/metrics.py` (`GET /metrics/tat`, `PATCH /stages/{id}/sla`)
+- [X] T042 [US3] Register the qc/batches/vendors/metrics routers in `backend/app/main.py`
 
 **Checkpoint**: workflow operable at scale and measurable.
 

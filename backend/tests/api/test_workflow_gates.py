@@ -63,10 +63,7 @@ def _record_passing_qc(admin_engine: Engine, sample_id: str) -> None:
 
 def _complete_all_consent(client: TestClient, sample_id: str):
     """Mark every seeded required consent item complete."""
-    items = [
-        {"item": item, "required": True, "complete": True}
-        for item in REQUIRED_CONSENT_ITEMS
-    ]
+    items = [{"item": item, "required": True, "complete": True} for item in REQUIRED_CONSENT_ITEMS]
     return client.post(f"/samples/{sample_id}/consent", json={"items": items})
 
 

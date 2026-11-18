@@ -59,14 +59,18 @@ def required_complete(conn: Connection, sample_id: uuid.UUID) -> bool:
     The ``required > 0`` guard means a sample with no consent on record never
     passes the molecular gate (defence in depth alongside the seeded checklist).
     """
-    row = conn.execute(
-        text(
-            "SELECT count(*) FILTER (WHERE required) AS required_total, "
-            "       count(*) FILTER (WHERE required AND NOT complete) AS incomplete "
-            "FROM consent_items WHERE sample_id = :sample_id"
-        ),
-        {"sample_id": sample_id},
-    ).mappings().one()
+    row = (
+        conn.execute(
+            text(
+                "SELECT count(*) FILTER (WHERE required) AS required_total, "
+                "       count(*) FILTER (WHERE required AND NOT complete) AS incomplete "
+                "FROM consent_items WHERE sample_id = :sample_id"
+            ),
+            {"sample_id": sample_id},
+        )
+        .mappings()
+        .one()
+    )
     return row["required_total"] > 0 and row["incomplete"] == 0
 
 
