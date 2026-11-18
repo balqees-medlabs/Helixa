@@ -107,8 +107,8 @@ Processed by the `jobs` worker (`kind='portal_push'`). `UNIQUE(report_id)` + `de
 
 Spec 1's RLS makes `users`/`user_roles` admin-only and denies every read without an acting identity — but login and per-request role resolution must run *before* an identity exists, as the non-superuser `helixa_app`. Three `SECURITY DEFINER` functions (owned by the migration/BYPASSRLS role, pinned `search_path`, `REVOKE`d from PUBLIC and `GRANT EXECUTE` only to `helixa_app`) are the minimal bootstrap:
 
-- `fn_auth_user(p_user_id, p_email)` → `(id, password_hash, is_active, display_name, role_slugs[])` — resolve a non-system user by id (per-request / refresh) or email (login).
-- `fn_auth_refresh_lookup(p_token_hash)` → `(user_id, family_id, expires_at, revoked_at)` — validate/rotate a refresh token when no session exists yet.
+- `fn_auth_user(p_user_id, p_email)` → `(id, email, password_hash, is_active, display_name, role_slugs[])` — resolve a non-system user by id (per-request / refresh) or email (login).
+- `fn_auth_refresh_lookup(p_token_hash)` → `(user_id, family_id, issued_at, expires_at, revoked_at)` — validate/rotate a refresh token when no session exists yet.
 - `fn_auth_touch_login(p_user_id)` — set `users.last_login_at`; the caller must have set `app.user_id` first, so the audit trigger attributes it correctly.
 
 These expose only auth-relevant columns and nothing else; all other access stays under RLS.
