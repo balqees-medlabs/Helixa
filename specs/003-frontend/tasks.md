@@ -21,12 +21,12 @@ description: "Task list for Frontend (Spec 3)"
 
 ## Phase 1: Setup
 
-- [ ] T001 Scaffold the Next.js 14 (App Router) + TypeScript project in `frontend/` (`package.json`, `tsconfig.json`, `next.config.mjs`); Node 20
-- [ ] T002 [P] Add Tailwind CSS + shadcn/ui and the Medlabs theme tokens in `frontend/tailwind.config.ts` + `frontend/styles/globals.css` (red accent, neutral grey text, white surfaces; CSS variables for light theme)
-- [ ] T003 [P] Add deps: `@tanstack/react-query`, `zod`, `openapi-typescript` (dev), Vitest + `@testing-library/react` + `msw` (dev), `@playwright/test` (dev) in `frontend/package.json`
-- [ ] T004 [P] Configure ESLint/Prettier and a lint rule/convention forbidding hand-written API URLs (only the generated client), in `frontend/.eslintrc` + `frontend/package.json`
-- [ ] T005 Add the client-generation + drift scripts to `frontend/package.json`: `gen:client` (openapi-typescript from `../backend/openapi.json` → `frontend/lib/api/schema.d.ts`) and `check:contract` (regenerate to a temp file and diff vs committed)
-- [ ] T006 [P] Add the reverse-proxy config (local dev in `frontend/dev-proxy/` and the `infra/` Caddy mapping) serving the SPA at `/` and the backend at `/api` same-origin, and **rewrite the refresh cookie's `Set-Cookie` path from `/auth` to `/api/auth`** on `/api/auth/*` responses so it reaches the refresh endpoint — pure infra, no backend change (research D1)
+- [X] T001 Scaffold the Next.js 14 (App Router) + TypeScript project in `frontend/` (`package.json`, `tsconfig.json`, `next.config.mjs`); Node 20
+- [X] T002 [P] Add Tailwind CSS + shadcn/ui and the Medlabs theme tokens in `frontend/tailwind.config.ts` + `frontend/styles/globals.css` (red accent, neutral grey text, white surfaces; CSS variables for light theme)
+- [X] T003 [P] Add deps: `@tanstack/react-query`, `zod`, `openapi-typescript` (dev), Vitest + `@testing-library/react` + `msw` (dev), `@playwright/test` (dev) in `frontend/package.json`
+- [X] T004 [P] Configure ESLint/Prettier and a lint rule/convention forbidding hand-written API URLs (only the generated client), in `frontend/.eslintrc` + `frontend/package.json`
+- [X] T005 Add the client-generation + drift scripts to `frontend/package.json`: `gen:client` (openapi-typescript from `../backend/openapi.json` → `frontend/lib/api/schema.d.ts`) and `check:contract` (regenerate to a temp file and diff vs committed)
+- [X] T006 [P] Add the reverse-proxy config (local dev in `frontend/dev-proxy/` and the `infra/` Caddy mapping) serving the SPA at `/` and the backend at `/api` same-origin, and **rewrite the refresh cookie's `Set-Cookie` path from `/auth` to `/api/auth`** on `/api/auth/*` responses so it reaches the refresh endpoint — pure infra, no backend change (research D1)
 
 **Checkpoint**: `npm run dev` serves an empty app; `npm run gen:client` produces types.
 
