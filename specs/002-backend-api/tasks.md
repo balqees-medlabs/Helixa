@@ -65,17 +65,17 @@ description: "Task list for Backend API (Spec 2)"
 
 ### Tests ⚠️ (write first)
 
-- [ ] T021 [P] [US1] `backend/tests/api/test_auth.py` — login success/failure (401, no user/password distinction), `/auth/me`, protected-without-cookie 401, refresh rotation + reuse-revokes-family, logout then 401, access-token expiry → 401 (SC-001)
-- [ ] T022 [P] [US1] `backend/tests/api/test_rbac.py` — each of the 5 roles allowed on its routes and denied (403) on others; admin passes all (SC-002)
-- [ ] T023 [P] [US1] `backend/tests/api/test_audit_attribution.py` — a create/update via the API produces a same-transaction `audit_log` row attributed to the acting user; no un-attributed writes (SC-003)
+- [X] T021 [P] [US1] `backend/tests/api/test_auth.py` — login success/failure (401, no user/password distinction), `/auth/me`, protected-without-cookie 401, refresh rotation + reuse-revokes-family, logout then 401, access-token expiry → 401 (SC-001)
+- [X] T022 [P] [US1] `backend/tests/api/test_rbac.py` — each of the 5 roles allowed on its routes and denied (403) on others; admin passes all (SC-002)
+- [X] T023 [P] [US1] `backend/tests/api/test_audit_attribution.py` — a create/update via the API produces a same-transaction `audit_log` row attributed to the acting user; no un-attributed writes (SC-003)
 
 ### Implementation
 
-- [ ] T024 [US1] `backend/app/services/auth_service.py` — verify credentials (argon2), issue access+refresh, rotate refresh (revoke old, new in family), reuse-detection (revoke family), logout, `last_login_at`
-- [ ] T025 [US1] `backend/app/api/auth.py` — `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` (204), `GET /auth/me`; set/clear cookies per `contracts/auth-contract.md`
-- [ ] T026 [US1] `backend/app/api/users.py` — admin-only `GET/POST /users`, `PATCH /users/{id}`, `POST /users/{id}/roles`, `DELETE /users/{id}/roles/{slug}`; `backend/app/api/roles.py` — `GET /roles`
-- [ ] T027 [US1] `backend/app/cli.py` — `python -m app.cli create-admin --email --name` (prompts password, writes argon2 hash); the only account-creation path needing no existing admin (FR-006)
-- [ ] T028 [US1] Register the auth/users/roles routers in `backend/app/main.py`
+- [X] T024 [US1] `backend/app/services/auth_service.py` — verify credentials (argon2), issue access+refresh, rotate refresh (revoke old, new in family), reuse-detection (revoke family), logout, `last_login_at`
+- [X] T025 [US1] `backend/app/api/auth.py` — `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` (204), `GET /auth/me`; set/clear cookies per `contracts/auth-contract.md`
+- [X] T026 [US1] `backend/app/api/users.py` — admin-only `GET/POST /users`, `PATCH /users/{id}`, `POST /users/{id}/roles`, `DELETE /users/{id}/roles/{slug}`; `backend/app/api/roles.py` — `GET /roles`
+- [X] T027 [US1] `backend/app/cli.py` — `python -m app.cli create-admin --email --name` (prompts password, writes argon2 hash); the only account-creation path needing no existing admin (FR-006)
+- [X] T028 [US1] Register the auth/users/roles routers in `backend/app/main.py`
 
 **Checkpoint**: secure, role-bound API with a complete audit trail — MVP.
 

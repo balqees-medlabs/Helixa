@@ -5,6 +5,7 @@ exposed to frontend JS — both live in HttpOnly cookies. The refresh token is
 stored only as a SHA-256 hash (research D1).
 """
 
+import contextlib
 import hashlib
 import secrets
 import uuid
@@ -22,9 +23,21 @@ REFRESH_COOKIE = "refresh"
 
 _hasher = PasswordHasher()  # argon2id with library defaults
 
+# Precomputed hash of a random value. Verifying against it burns roughly one
+# argon2 verification so the "unknown account" path takes similar time to the
+# "wrong password" path (mitigates user enumeration by response timing).
+_DUMMY_HASH = _hasher.hash(secrets.token_urlsafe(32))
+
 
 def hash_password(password: str) -> str:
     return _hasher.hash(password)
+
+
+def dummy_verify(password: str) -> None:
+    """Spend ~one argon2 verify and discard the result; call on the no-such-user
+    path so login timing does not reveal whether an email exists."""
+    with contextlib.suppress(Argon2Error):
+        _hasher.verify(_DUMMY_HASH, password)
 
 
 def verify_password(password_hash: str | None, password: str) -> bool:

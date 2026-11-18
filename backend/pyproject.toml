@@ -23,7 +23,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["app", "app.core", "app.db"]
+packages = ["app", "app.api", "app.core", "app.db", "app.schemas", "app.services"]
 
 [tool.ruff]
 line-length = 100

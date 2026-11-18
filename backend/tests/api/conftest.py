@@ -23,7 +23,7 @@ from sqlalchemy.engine import Engine
 
 from app.core import deps
 from app.core.config import Settings
-from app.core.security import ACCESS_COOKIE, encode_access_token
+from app.core.security import ACCESS_COOKIE, encode_access_token, hash_password
 from app.db.session_context import set_session_context
 from app.main import app
 from tests.db.conftest import TEST_APP_PASSWORD
@@ -60,9 +60,13 @@ def admin_engine(_db_admin_engine: Engine) -> Iterator[Engine]:  # noqa: F811
 
 @pytest.fixture(scope="session")
 def client(database_url: str) -> Iterator[TestClient]:
-    """TestClient over the real app, pointed at the disposable Postgres."""
+    """TestClient over the real app, pointed at the disposable Postgres.
+
+    The base URL is https so the ``Secure`` auth cookies set by the login route
+    are sent back by the client (httpx only sends Secure cookies over https).
+    """
     deps.reset_engine()
-    with TestClient(app) as test_client:
+    with TestClient(app, base_url="https://testserver") as test_client:
         yield test_client
     deps.reset_engine()
 
@@ -95,9 +99,55 @@ def _user_factory(admin_engine: Engine) -> Iterator[Callable[..., uuid.UUID]]:
 
 
 def _signed_client(app_obj, user_id: uuid.UUID) -> TestClient:
-    test_client = TestClient(app_obj)
+    test_client = TestClient(app_obj, base_url="https://testserver")
     test_client.cookies.set(ACCESS_COOKIE, encode_access_token(user_id))
     return test_client
+
+
+@pytest.fixture(scope="session")
+def account_factory(admin_engine: Engine) -> Iterator[Callable[..., dict]]:
+    """Create an active user with a password and roles; return credentials.
+
+    The login flow itself is exercised by the auth tests; accounts are written
+    through the admin engine and audited as the system actor.
+    """
+
+    def _create(
+        *slugs: str,
+        password: str = "correct-horse-battery",
+        email: str | None = None,
+        display_name: str | None = None,
+    ) -> dict:
+        address = email or f"account-{uuid.uuid4().hex[:12]}@test.local"
+        name = display_name or f"Test account {address.split('@')[0]}"
+        password_hash = hash_password(password)
+        with admin_engine.connect() as conn, conn.begin():
+            sys_id = conn.execute(text("SELECT id FROM users WHERE is_system")).scalar_one()
+            set_session_context(conn, sys_id, ("admin",))
+            user_id = conn.execute(
+                text(
+                    "INSERT INTO users (email, display_name, password_hash, password_set_at) "
+                    "VALUES (:email, :name, :hash, now()) RETURNING id"
+                ),
+                {"email": address, "name": name, "hash": password_hash},
+            ).scalar_one()
+            for slug in slugs:
+                conn.execute(
+                    text(
+                        "INSERT INTO user_roles (user_id, role_id) "
+                        "SELECT :user_id, id FROM roles WHERE slug = :slug"
+                    ),
+                    {"user_id": str(user_id), "slug": slug},
+                )
+        return {
+            "id": user_id,
+            "email": address,
+            "display_name": name,
+            "password": password,
+            "roles": list(slugs),
+        }
+
+    yield _create
 
 
 @pytest.fixture(scope="session")

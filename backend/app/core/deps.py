@@ -66,8 +66,10 @@ def get_tx() -> Iterator[Connection]:
 @dataclass(frozen=True)
 class AuthContext:
     user_id: uuid.UUID
+    email: str | None
     roles: tuple[str, ...]
     display_name: str
+    is_active: bool = True
 
 
 def current_user(request: Request, conn: Annotated[Connection, Depends(get_tx)]) -> AuthContext:
@@ -85,7 +87,8 @@ def current_user(request: Request, conn: Annotated[Connection, Depends(get_tx)])
     row = (
         conn.execute(
             text(
-                "SELECT id, is_active, display_name, role_slugs FROM fn_auth_user(:user_id, NULL)"
+                "SELECT id, email, is_active, display_name, role_slugs "
+                "FROM fn_auth_user(:user_id, NULL)"
             ),
             {"user_id": user_id},
         )
@@ -98,7 +101,13 @@ def current_user(request: Request, conn: Annotated[Connection, Depends(get_tx)])
 
     roles: tuple[str, ...] = tuple(row["role_slugs"])
     set_session_context(conn, row["id"], roles)
-    return AuthContext(user_id=row["id"], roles=roles, display_name=row["display_name"])
+    return AuthContext(
+        user_id=row["id"],
+        email=row["email"],
+        roles=roles,
+        display_name=row["display_name"],
+        is_active=row["is_active"],
+    )
 
 
 def require_roles(*slugs: str):

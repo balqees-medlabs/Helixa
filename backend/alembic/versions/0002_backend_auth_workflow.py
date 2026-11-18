@@ -186,12 +186,13 @@ TO helixa_app;
 # any identity exists; the caller sets app.user_id/role_names afterwards.
 FN_AUTH_USER = r"""
 CREATE OR REPLACE FUNCTION fn_auth_user(p_user_id uuid, p_email text DEFAULT NULL)
-RETURNS TABLE (id uuid, password_hash text, is_active boolean, display_name text, role_slugs text[])
+RETURNS TABLE (id uuid, email text, password_hash text, is_active boolean,
+               display_name text, role_slugs text[])
 LANGUAGE sql STABLE
 SECURITY DEFINER
 SET search_path = pg_catalog, public
 AS $fn$
-    SELECT u.id, u.password_hash, u.is_active, u.display_name,
+    SELECT u.id, u.email::text, u.password_hash, u.is_active, u.display_name,
            ARRAY(
                SELECT r.slug
                FROM user_roles ur
@@ -211,12 +212,13 @@ $fn$;
 # service decides validity/rotation; raw token hashes never leave the DB row.
 FN_AUTH_REFRESH_LOOKUP = r"""
 CREATE OR REPLACE FUNCTION fn_auth_refresh_lookup(p_token_hash text)
-RETURNS TABLE (user_id uuid, family_id uuid, expires_at timestamptz, revoked_at timestamptz)
+RETURNS TABLE (user_id uuid, family_id uuid, issued_at timestamptz,
+               expires_at timestamptz, revoked_at timestamptz)
 LANGUAGE sql STABLE
 SECURITY DEFINER
 SET search_path = pg_catalog, public
 AS $fn$
-    SELECT rt.user_id, rt.family_id, rt.expires_at, rt.revoked_at
+    SELECT rt.user_id, rt.family_id, rt.issued_at, rt.expires_at, rt.revoked_at
     FROM refresh_tokens rt
     WHERE rt.token_hash = p_token_hash
 $fn$;
