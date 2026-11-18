@@ -89,15 +89,15 @@ description: "Task list for Backend API (Spec 2)"
 
 ### Tests ⚠️
 
-- [ ] T029 [P] [US2] `backend/tests/api/test_workflow_gates.py` — consent-before-molecular gate, QC-before-report gate, no-skip rule, each returns 409 with a reason (SC-004)
-- [ ] T030 [P] [US2] `backend/tests/api/test_workflow_concurrency.py` — two advances with the same `from_stage` → exactly one success and one 409; exactly one new `sample_stage_events` row (SC-009, FR-010a)
+- [X] T029 [P] [US2] `backend/tests/api/test_workflow_gates.py` — consent-before-molecular gate, QC-before-report gate, no-skip rule, each returns 409 with a reason (SC-004)
+- [X] T030 [P] [US2] `backend/tests/api/test_workflow_concurrency.py` — two advances with the same `from_stage` → exactly one success and one 409; exactly one new `sample_stage_events` row (SC-009, FR-010a)
 
 ### Implementation
 
-- [ ] T031 [US2] `backend/app/services/workflow_service.py` — `advance(sample_id, from_stage, to_stage, actor)`: assert `to = from + 1` (no skip → 409); gate check (molecular ⇒ all required `consent_items` complete; report ⇒ `qc_results(kind='qc', passed=true)`); guarded `UPDATE samples SET current_stage_id=:to WHERE id=:id AND current_stage_id=:from` (0 rows → 409); the stage event is written by the DB (Spec 1 duration trigger)
-- [ ] T032 [US2] `backend/app/services/consent_service.py` — create/read/set `consent_items` completeness; expose required-items-complete for the gate
-- [ ] T033 [US2] `backend/app/api/samples.py` — `POST /samples` (stage 1, unique `case_id`, pseudonymous), `GET /samples`, `GET /samples/{id}`, `GET /samples/{id}/events`, `POST /samples/{id}/consent`, `POST /samples/{id}/advance` (body carries `from_stage`); role guards per `research.md` D3
-- [ ] T034 [US2] Register the samples router in `backend/app/main.py`
+- [X] T031 [US2] `backend/app/services/workflow_service.py` — `advance(sample_id, from_stage, to_stage, actor)`: assert `to = from + 1` (no skip → 409); gate check (molecular ⇒ all required `consent_items` complete; report ⇒ `qc_results(kind='qc', passed=true)`); guarded `UPDATE samples SET current_stage_id=:to WHERE id=:id AND current_stage_id=:from` (0 rows → 409); the stage event is written by the DB (Spec 1 duration trigger)
+- [X] T032 [US2] `backend/app/services/consent_service.py` — create/read/set `consent_items` completeness; expose required-items-complete for the gate
+- [X] T033 [US2] `backend/app/api/samples.py` — `POST /samples` (stage 1, unique `case_id`, pseudonymous), `GET /samples`, `GET /samples/{id}`, `GET /samples/{id}/events`, `POST /samples/{id}/consent`, `POST /samples/{id}/advance` (body carries `from_stage`); role guards per `research.md` D3
+- [X] T034 [US2] Register the samples router in `backend/app/main.py`
 
 **Checkpoint**: gated workflow authoritative and concurrency-safe.
 
