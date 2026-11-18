@@ -9,13 +9,18 @@ the system actor as the acting identity, and writes an argon2id password hash.
 
 import argparse
 import getpass
+import json
 import sys
+from pathlib import Path
 
 from sqlalchemy import create_engine, make_url, text
 
 from app.core.config import get_settings
 from app.core.security import hash_password
 from app.db.session_context import set_session_context
+from app.main import app
+
+OPENAPI_PATH = Path(__file__).resolve().parents[1] / "openapi.json"
 
 
 def _admin_engine():
@@ -67,6 +72,17 @@ def _prompt_password() -> str:
     return first
 
 
+def render_openapi() -> str:
+    """Deterministic OpenAPI rendering (the committed contract, SC-008)."""
+    return json.dumps(app.openapi(), indent=2, sort_keys=True) + "\n"
+
+
+def export_openapi(path: str | Path | None = None) -> Path:
+    target = Path(path) if path is not None else OPENAPI_PATH
+    target.write_text(render_openapi(), encoding="utf-8")
+    return target
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m app.cli")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -78,11 +94,21 @@ def _build_parser() -> argparse.ArgumentParser:
         "--password",
         help="non-interactive password (omit to be prompted securely)",
     )
+
+    export = sub.add_parser("export-openapi", help="write the committed OpenAPI contract")
+    export.add_argument(
+        "--output",
+        help=f"target path (default: {OPENAPI_PATH})",
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    if args.command == "export-openapi":
+        target = export_openapi(args.output)
+        print(f"Wrote OpenAPI contract to {target}")
+        return 0
     if args.command != "create-admin":
         return 2
 

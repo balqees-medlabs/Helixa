@@ -152,10 +152,10 @@ description: "Task list for Backend API (Spec 2)"
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T050 [P] Add `export-openapi` to `backend/app/cli.py` and commit `backend/openapi.json`; `backend/tests/api/test_openapi_contract.py` asserts the generated schema matches the committed file (no drift, SC-008)
-- [ ] T051 [P] Update `backend/README.md` — running the API + worker, auth/session model, create-admin, and the `tests/api` suite
-- [ ] T052 Run the full `quickstart.md` validation (steps 1–7) end-to-end against a real Postgres; confirm SC-001…SC-009
-- [ ] T053 [P] Confirm the Alembic history is linear (`0001`→`0002`, single head) and `0003` is left free for Spec 4; run ruff over `backend/`
+- [X] T050 [P] Add `export-openapi` to `backend/app/cli.py` and commit `backend/openapi.json`; `backend/tests/api/test_openapi_contract.py` asserts the generated schema matches the committed file (no drift, SC-008)
+- [X] T051 [P] Update `backend/README.md` — running the API + worker, auth/session model, create-admin, and the `tests/api` suite
+- [X] T052 Run the full `quickstart.md` validation (steps 1–7) end-to-end against a real Postgres; confirm SC-001…SC-009
+- [X] T053 [P] Confirm the Alembic history is linear (`0001`→`0002`, single head) and `0003` is left free for Spec 4; run ruff over `backend/`
 
 ---
 
