@@ -48,3 +48,9 @@ def get_settings() -> Settings:
     if _settings is None:
         _settings = Settings()
     return _settings
+
+
+def reset_cached_settings() -> None:
+    """Forget the cached instance so the next get_settings() re-reads the env."""
+    global _settings
+    _settings = None

@@ -1,8 +1,8 @@
 """SQLAlchemy models for the Spec 1 data layer.
 
-Field-for-field mirrors of the schema created by migration
-``0001_database_foundation``; no business logic lives here. Later phases add
-``Role``/``UserRole`` (US3).
+Field-for-field mirrors of the schema created by migrations
+``0001_database_foundation`` and ``0002_backend_auth_workflow``; no business
+logic lives here.
 """
 
 import uuid
@@ -39,6 +39,12 @@ class User(Base):
     display_name: Mapped[str] = mapped_column(Text)
     is_system: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+
+    # Auth columns (0002): NULL until an admin sets credentials; the system
+    # actor never gets credentials.
+    password_hash: Mapped[str | None] = mapped_column(Text)
+    password_set_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     __table_args__ = (
         Index("uq_users_is_system", "is_system", unique=True, postgresql_where=text("is_system")),
@@ -238,4 +244,138 @@ class UserRole(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "role_id", name="uq_user_roles_user_role"),
         Index("ix_user_roles_role", "role_id"),
+    )
+
+
+# --- Spec 2 (0002): auth & workflow-support tables -----------------------------
+
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    token_hash: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    family_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    issued_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (Index("ix_refresh_tokens_user", "user_id"),)
+
+
+class ConsentItem(Base):
+    __tablename__ = "consent_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    sample_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("samples.id", ondelete="CASCADE"), nullable=False
+    )
+    item: Mapped[str] = mapped_column(Text, nullable=False)
+    required: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    complete: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    completed_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (UniqueConstraint("sample_id", "item", name="uq_consent_items_sample_item"),)
+
+
+class QcResult(Base):
+    __tablename__ = "qc_results"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    sample_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("samples.id"), nullable=False)
+    kind: Mapped[str] = mapped_column(String, nullable=False)
+    passed: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    detail: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default=text("'{}'"))
+    recorded_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    recorded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (
+        CheckConstraint("kind IN ('data_generation', 'qc')", name="ck_qc_results_kind"),
+        Index("ix_qc_results_sample_kind", "sample_id", "kind"),
+    )
+
+
+class Batch(Base):
+    __tablename__ = "batches"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+
+
+class BatchMember(Base):
+    __tablename__ = "batch_members"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    batch_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("batches.id", ondelete="CASCADE"), nullable=False
+    )
+    sample_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("samples.id", ondelete="CASCADE"), nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint("batch_id", "sample_id", name="uq_batch_members_batch_sample"),
+    )
+
+
+class Report(Base):
+    __tablename__ = "reports"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    sample_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("samples.id"), nullable=False)
+    path: Mapped[str] = mapped_column(Text, nullable=False)
+    content_type: Mapped[str] = mapped_column(Text, nullable=False)
+    size_bytes: Mapped[int] = mapped_column(nullable=False)
+    sha256: Mapped[str] = mapped_column(Text, nullable=False)
+    uploaded_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    __table_args__ = (CheckConstraint("size_bytes > 0", name="ck_reports_size_positive"),)
+
+
+class PortalPush(Base):
+    __tablename__ = "portal_pushes"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    report_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("reports.id"), nullable=False, unique=True
+    )
+    status: Mapped[str] = mapped_column(String, nullable=False, server_default=text("'queued'"))
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    last_error: Mapped[str | None] = mapped_column(Text)
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('queued', 'success', 'failed')", name="ck_portal_pushes_status"
+        ),
+        Index("ix_portal_pushes_queue", "status", "next_attempt_at"),
     )
