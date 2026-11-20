@@ -36,16 +36,16 @@ description: "Task list for Frontend (Spec 3)"
 
 **⚠️ CRITICAL**: no user story work begins until this is complete.
 
-- [ ] T007 Generate the typed API client: run `gen:client` and commit `frontend/lib/api/schema.d.ts`
-- [ ] T008 Create the typed fetch wrapper `frontend/lib/api/client.ts` — base `/api`, `credentials: 'include'`, JSON + multipart helpers, typed against the generated schema; **on 401 → one `POST /api/auth/refresh` then retry; concurrent 401s share a single in-flight refresh; failed refresh → clear session + redirect to `/login?next=`** (research D3, auth-flow.md)
-- [ ] T009 [P] Create `frontend/lib/query/client.ts` — TanStack Query client + a `POLL_MS` (~30–60s) constant for board/status queries
-- [ ] T010 Create `frontend/lib/auth/AuthProvider.tsx` — holds the session from `GET /api/auth/me` (TanStack key `['me']`), exposes `user`, `roles`, `can(...slugs)` (admin passes all), `login`, `logout`
-- [ ] T011 [P] Create `frontend/lib/i18n/dir.ts` + sentence-case helpers and wire `dir`/lang on `<html>` (LTR now, RTL-safe via logical CSS properties)
-- [ ] T012 Create `frontend/app/layout.tsx` (root: providers, theme, dir) and `frontend/app/(app)/layout.tsx` (authenticated shell: redirect when unauthenticated, role-based `RoleNav`, dashboard switcher slot)
-- [ ] T013 Create `frontend/middleware.ts` — redirect `(app)` routes to `/login` when the `access` cookie is absent (presence check only; never decodes the token)
-- [ ] T014 [P] Create shared components in `frontend/components/`: `RoleNav`, `GateError` (renders a backend `{detail}` verbatim), `StageBadge`, `EmptyState`, `SubmitButton` (disables while pending — no double-submit)
-- [ ] T015 [P] Set up the test harness: `frontend/tests/msw/handlers.ts` (mock the API per contract) + `frontend/vitest.config.ts`, and `frontend/playwright.config.ts` (E2E against a running backend)
-- [ ] T015a [P] Add the Playwright E2E fixture `frontend/e2e/fixtures.ts` + a `global-setup`: provision a backend admin (`python -m app.cli create-admin`), seed a QC-passed sample, and capture an authenticated `storageState` per role for the journeys (so E2E specs start signed in with data)
+- [X] T007 Generate the typed API client: run `gen:client` and commit `frontend/lib/api/schema.d.ts`
+- [X] T008 Create the typed fetch wrapper `frontend/lib/api/client.ts` — base `/api`, `credentials: 'include'`, JSON + multipart helpers, typed against the generated schema; **on 401 → one `POST /api/auth/refresh` then retry; concurrent 401s share a single in-flight refresh; failed refresh → clear session + redirect to `/login?next=`** (research D3, auth-flow.md)
+- [X] T009 [P] Create `frontend/lib/query/client.ts` — TanStack Query client + a `POLL_MS` (~30–60s) constant for board/status queries
+- [X] T010 Create `frontend/lib/auth/AuthProvider.tsx` — holds the session from `GET /api/auth/me` (TanStack key `['me']`), exposes `user`, `roles`, `can(...slugs)` (admin passes all), `login`, `logout`
+- [X] T011 [P] Create `frontend/lib/i18n/dir.ts` + sentence-case helpers and wire `dir`/lang on `<html>` (LTR now, RTL-safe via logical CSS properties)
+- [X] T012 Create `frontend/app/layout.tsx` (root: providers, theme, dir) and `frontend/app/(app)/layout.tsx` (authenticated shell: redirect when unauthenticated, role-based `RoleNav`, dashboard switcher slot)
+- [X] T013 Create `frontend/middleware.ts` — redirect `(app)` routes to `/login` when the `access` cookie is absent (presence check only; never decodes the token)
+- [X] T014 [P] Create shared components in `frontend/components/`: `RoleNav`, `GateError` (renders a backend `{detail}` verbatim), `StageBadge`, `EmptyState`, `SubmitButton` (disables while pending — no double-submit)
+- [X] T015 [P] Set up the test harness: `frontend/tests/msw/handlers.ts` (mock the API per contract) + `frontend/vitest.config.ts`, and `frontend/playwright.config.ts` (E2E against a running backend)
+- [X] T015a [P] Add the Playwright E2E fixture `frontend/e2e/fixtures.ts` + a `global-setup`: provision a backend admin (`python -m app.cli create-admin`), seed a QC-passed sample, and capture an authenticated `storageState` per role for the journeys (so E2E specs start signed in with data)
 
 **Checkpoint**: the shell renders, redirects when signed out, and `apiFetch` refresh/retry works against MSW.
 
