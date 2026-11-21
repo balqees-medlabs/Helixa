@@ -82,16 +82,16 @@ description: "Task list for Frontend (Spec 3)"
 
 ### Tests ⚠️
 
-- [ ] T023 [P] [US2] `frontend/tests/workflow.test.tsx` (MSW) — advance with consent-incomplete/QC-missing/skip/stale → the backend `{detail}` rendered via `GateError` (not generic); successful advance updates the view (SC-003)
-- [ ] T024 [P] [US2] `frontend/e2e/workflow.spec.ts` (Playwright) — register → open → complete consent → advance to molecular against a live backend
+- [X] T023 [P] [US2] `frontend/tests/workflow.test.tsx` (MSW) — advance with consent-incomplete/QC-missing/skip/stale → the backend `{detail}` rendered via `GateError` (not generic); successful advance updates the view (SC-003)
+- [X] T024 [P] [US2] `frontend/e2e/workflow.spec.ts` (Playwright) — register → open → complete consent → advance to molecular against a live backend
 
 ### Implementation
 
-- [ ] T025 [P] [US2] `frontend/app/(app)/samples/page.tsx` + `frontend/lib/features/samples/queries.ts` — sample list (`GET /samples`) with case/stage/status and an empty state
-- [ ] T026 [US2] `frontend/app/(app)/samples/register/page.tsx` — register form (Zod), `POST /samples`; duplicate case id → the backend reason; genomics/admin only
-- [ ] T027 [US2] `frontend/app/(app)/samples/[id]/page.tsx` — detail + ordered stage history (`/samples/{id}`, `/events`) with durations
-- [ ] T028 [US2] `frontend/components/ConsentChecklist.tsx` + wire on the detail page — `GET/POST /samples/{id}/consent`, shows `required_complete` and the molecular-gate state
-- [ ] T029 [US2] `frontend/components/AdvanceAction.tsx` — advance control sending `from_stage`, offered on any active sample (the frontend does **not** encode the stage→role map; it defers to the backend); maps 403→forbidden and 409/422→`GateError` reason verbatim; invalidates sample/events/board/metrics on success
+- [X] T025 [P] [US2] `frontend/app/(app)/samples/page.tsx` + `frontend/lib/features/samples/queries.ts` — sample list (`GET /samples`) with case/stage/status and an empty state
+- [X] T026 [US2] `frontend/app/(app)/samples/register/page.tsx` — register form (Zod), `POST /samples`; duplicate case id → the backend reason; genomics/admin only
+- [X] T027 [US2] `frontend/app/(app)/samples/[id]/page.tsx` — detail + ordered stage history (`/samples/{id}`, `/events`) with durations
+- [X] T028 [US2] `frontend/components/ConsentChecklist.tsx` + wire on the detail page — `GET/POST /samples/{id}/consent`, shows `required_complete` and the molecular-gate state
+- [X] T029 [US2] `frontend/components/AdvanceAction.tsx` — advance control sending `from_stage`, offered on any active sample (the frontend does **not** encode the stage→role map; it defers to the backend); maps 403→forbidden and 409/422→`GateError` reason verbatim; invalidates sample/events/board/metrics on success
 
 **Checkpoint**: the gated workflow is operable with reasons surfaced.
 
