@@ -1,18 +1,15 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 
-import {
-  ApiError,
-  apiFetch,
-  resetSessionExpiredState,
-  setSessionExpiredHandler,
-} from "@/lib/api/client";
-import type { components } from "@/lib/api/schema";
+import { resetSessionExpiredState, setSessionExpiredHandler } from "@/lib/api/client";
+import * as authService from "@/lib/auth/authService";
+import type { SessionUser } from "@/lib/auth/authService";
 
-export type SessionUser = components["schemas"]["UserOut"];
+export type { SessionUser };
 
 interface AuthContextValue {
   user: SessionUser | null;
@@ -27,23 +24,14 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const ME_QUERY_KEY = ["me"] as const;
 
-async function loadSession(): Promise<SessionUser | null> {
-  try {
-    return await apiFetch("/auth/me");
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401) {
-      return null;
-    }
-    throw error;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const sessionQuery = useQuery({
     queryKey: ME_QUERY_KEY,
-    queryFn: loadSession,
+    queryFn: authService.me,
     retry: false,
     staleTime: 30_000,
   });
@@ -63,10 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const nextUser = await apiFetch("/auth/login", {
-        method: "post",
-        body: { email, password },
-      });
+      const nextUser = await authService.login(email, password);
       resetSessionExpiredState();
       queryClient.setQueryData(ME_QUERY_KEY, nextUser);
       return nextUser;
@@ -76,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await apiFetch("/auth/logout", { method: "post" });
+      await authService.logout();
     } finally {
       queryClient.setQueryData(ME_QUERY_KEY, null);
       queryClient.removeQueries({
@@ -92,11 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.removeQueries({
         predicate: (query) => query.queryKey[0] !== ME_QUERY_KEY[0],
       });
-      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-        window.location.assign(`/login?next=${encodeURIComponent(nextPath)}`);
+      if (pathname !== "/login") {
+        router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
       }
     });
-  }, [queryClient]);
+  }, [queryClient, pathname, router]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

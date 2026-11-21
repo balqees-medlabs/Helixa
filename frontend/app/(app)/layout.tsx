@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import { RoleNav } from "@/components/RoleNav";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { isSignedIn, loginRedirect } from "@/lib/auth/guards";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -12,9 +13,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      const next = `${pathname}${window.location.search}`;
-      router.replace(`/login?next=${encodeURIComponent(next)}`);
+    if (!isLoading && !isSignedIn(user)) {
+      router.replace(loginRedirect(pathname, window.location.search));
     }
   }, [isLoading, user, pathname, router]);
 
@@ -28,7 +28,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!isSignedIn(user)) {
     return (
       <main className="container flex min-h-screen items-center justify-center py-16">
         <p role="status" className="text-sm text-muted-foreground">

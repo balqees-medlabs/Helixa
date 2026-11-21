@@ -59,16 +59,16 @@ description: "Task list for Frontend (Spec 3)"
 
 ### Tests ⚠️
 
-- [ ] T016 [P] [US1] `frontend/tests/auth.test.tsx` (MSW) — login success → `/auth/me` roles shown; wrong credentials → one non-revealing error; protected route while signed out → redirect; 401 → silent refresh → retry; failed refresh → redirect; logout → signed out (SC-001)
-- [ ] T017 [P] [US1] `frontend/tests/rbac-nav.test.tsx` (MSW) — for each role, only permitted nav/actions render; admin sees all; multi-role sees all its areas (SC-002)
-- [ ] T018 [P] [US1] `frontend/e2e/auth.spec.ts` (Playwright) — sign in → land on role home; sign out → `/login`
+- [X] T016 [P] [US1] `frontend/tests/auth.test.tsx` (MSW) — login success → `/auth/me` roles shown; wrong credentials → one non-revealing error; protected route while signed out → redirect; 401 → silent refresh → retry; failed refresh → redirect; logout → signed out (SC-001)
+- [X] T017 [P] [US1] `frontend/tests/rbac-nav.test.tsx` (MSW) — for each role, only permitted nav/actions render; admin sees all; multi-role sees all its areas (SC-002)
+- [X] T018 [P] [US1] `frontend/e2e/auth.spec.ts` (Playwright) — sign in → land on role home; sign out → `/login`
 
 ### Implementation
 
-- [ ] T019 [US1] `frontend/app/(auth)/login/page.tsx` — sign-in form (Zod), posts via `authService.login`, one non-revealing error, routes to `?next` or the landing dashboard
-- [ ] T020 [US1] `frontend/lib/auth/authService.ts` — `login`/`logout`/`me` through `apiFetch`; landing-dashboard resolution (most privileged role, research D4)
-- [ ] T021 [US1] `frontend/lib/auth/guards.ts` + wire into `(app)/layout.tsx` — redirect unauthenticated; `requireRoles` helper hides/forbids per role
-- [ ] T022 [US1] Finalize `RoleNav` + the dashboard switcher in `frontend/components/RoleNav.tsx` driven by `can()` and the role→area map (contracts/routes.md)
+- [X] T019 [US1] `frontend/app/(auth)/login/page.tsx` — sign-in form (Zod), posts via `authService.login`, one non-revealing error, routes to `?next` or the landing dashboard
+- [X] T020 [US1] `frontend/lib/auth/authService.ts` — `login`/`logout`/`me` through `apiFetch`; landing-dashboard resolution (most privileged role, research D4)
+- [X] T021 [US1] `frontend/lib/auth/guards.ts` + wire into `(app)/layout.tsx` — redirect unauthenticated; `requireRoles` helper hides/forbids per role
+- [X] T022 [US1] Finalize `RoleNav` + the dashboard switcher in `frontend/components/RoleNav.tsx` driven by `can()` and the role→area map (contracts/routes.md)
 
 **Checkpoint**: secure, role-bound, themed shell — MVP.
 
