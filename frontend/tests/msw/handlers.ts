@@ -137,6 +137,8 @@ let consentStore: Record<string, TestConsentItem[]> = {};
 let qcPassed = new Set<string>();
 let vendorStore: TestVendor[] = [];
 let batchStore: TestBatch[] = [];
+let reportStore: components["schemas"]["ReportOut"][] = [];
+let pushStore: components["schemas"]["PortalPushOut"][] = [];
 let stageSlaStore: Record<number, number> = { ...DEFAULT_STAGE_SLA };
 
 export function resetSamples(): void {
@@ -146,6 +148,8 @@ export function resetSamples(): void {
   qcPassed = new Set<string>();
   vendorStore = [];
   batchStore = [];
+  reportStore = [];
+  pushStore = [];
   stageSlaStore = { ...DEFAULT_STAGE_SLA };
 }
 
@@ -261,6 +265,57 @@ function findSample(sampleId: string | readonly string[] | undefined): TestSampl
 const notFound = () => HttpResponse.json({ detail: "Sample not found" }, { status: 404 });
 
 const forbidden = (detail: string) => HttpResponse.json({ detail }, { status: 403 });
+
+export interface SeedReportOptions {
+  sampleId?: string;
+  pushStatus?: string;
+  attempts?: number;
+  lastError?: string | null;
+  sizeBytes?: number;
+}
+
+export function seedReport(options: SeedReportOptions = {}): {
+  report: components["schemas"]["ReportOut"];
+  push: components["schemas"]["PortalPushOut"];
+} {
+  const sample = options.sampleId
+    ? findSample(options.sampleId)
+    : sampleStore[sampleStore.length - 1];
+  const sampleId = options.sampleId ?? sample?.id ?? crypto.randomUUID();
+  const status = options.pushStatus ?? "queued";
+  const reportId = crypto.randomUUID();
+  const pushId = crypto.randomUUID();
+  const now = new Date().toISOString();
+
+  const report: components["schemas"]["ReportOut"] = {
+    id: reportId,
+    sample_id: sampleId,
+    path: `/data/reports/${sampleId}/${reportId}.pdf`,
+    content_type: "application/pdf",
+    size_bytes: options.sizeBytes ?? 2048,
+    sha256: "a".repeat(64),
+    uploaded_by: TEST_USERS.bioinformatics.id,
+    uploaded_at: now,
+    push_id: pushId,
+    push_status: status,
+  };
+  const push: components["schemas"]["PortalPushOut"] = {
+    id: pushId,
+    report_id: reportId,
+    status,
+    attempts: options.attempts ?? (status === "failed" ? 1 : 0),
+    last_error: options.lastError ?? (status === "failed" ? "Portal unavailable" : null),
+    next_attempt_at: now,
+    delivered_at: status === "success" ? now : null,
+  };
+
+  reportStore.push(report);
+  pushStore.push(push);
+  return { report, push };
+}
+
+const REPORT_MAX_BYTES = 52_428_800;
+const ALLOWED_REPORT_TYPES = new Set(["application/pdf"]);
 
 function round2(value: number): number {
   return Math.round(value * 100) / 100;
@@ -791,5 +846,125 @@ export const handlers = [
     }
 
     return HttpResponse.json(vendor);
+  }),
+
+  http.post("/api/samples/:sampleId/report", async ({ params, request }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    }
+    if (!hasRole("bioinformatics")) {
+      return forbidden("Insufficient role");
+    }
+    const sample = findSample(params.sampleId);
+    if (!sample) {
+      return notFound();
+    }
+    if (!qcPassed.has(sample.id)) {
+      return HttpResponse.json(
+        { detail: "Quality control must be passed before report upload" },
+        { status: 409 },
+      );
+    }
+
+    const form = await request.formData();
+    const file = form.get("file");
+    if (!file || typeof file === "string") {
+      return HttpResponse.json({ detail: "Report file is required" }, { status: 422 });
+    }
+
+    const mediaType = (file.type || "").split(";")[0].trim().toLowerCase();
+    if (!ALLOWED_REPORT_TYPES.has(mediaType)) {
+      return HttpResponse.json(
+        {
+          detail: `Unsupported content type ${mediaType || "unknown"}; allowed: application/pdf`,
+        },
+        { status: 415 },
+      );
+    }
+    if (file.size === 0) {
+      return HttpResponse.json({ detail: "Report file is empty" }, { status: 422 });
+    }
+    if (file.size > REPORT_MAX_BYTES) {
+      return HttpResponse.json(
+        { detail: `Report exceeds the ${REPORT_MAX_BYTES}-byte limit` },
+        { status: 413 },
+      );
+    }
+
+    const { report } = seedReport({ sampleId: sample.id, sizeBytes: file.size });
+    return HttpResponse.json(report, { status: 201 });
+  }),
+
+  http.get("/api/reports/:reportId/file", ({ params }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    }
+    if (!hasRole("admin", "bioinformatics", "genomics")) {
+      return forbidden("Insufficient role");
+    }
+    const report = reportStore.find((entry) => entry.id === params.reportId);
+    if (!report) {
+      return HttpResponse.json({ detail: "Report not found" }, { status: 404 });
+    }
+    return new HttpResponse("%PDF-1.4 test", {
+      headers: { "Content-Type": "application/pdf" },
+    });
+  }),
+
+  http.get("/api/reports/:reportId", ({ params }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    }
+    if (!hasRole("admin", "bioinformatics", "genomics")) {
+      return forbidden("Insufficient role");
+    }
+    const report = reportStore.find((entry) => entry.id === params.reportId);
+    return report
+      ? HttpResponse.json(report)
+      : HttpResponse.json({ detail: "Report not found" }, { status: 404 });
+  }),
+
+  http.get("/api/portal-pushes/:pushId", ({ params }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    }
+    if (!hasRole("admin")) {
+      return forbidden("Insufficient role");
+    }
+    const push = pushStore.find((entry) => entry.id === params.pushId);
+    return push
+      ? HttpResponse.json(push)
+      : HttpResponse.json({ detail: "Portal push not found" }, { status: 404 });
+  }),
+
+  http.post("/api/portal-pushes/:pushId/retry", ({ params }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    }
+    if (!hasRole("admin")) {
+      return forbidden("Insufficient role");
+    }
+    const push = pushStore.find((entry) => entry.id === params.pushId);
+    if (!push) {
+      return HttpResponse.json({ detail: "Portal push not found" }, { status: 404 });
+    }
+    if (push.status === "success" || push.delivered_at) {
+      return HttpResponse.json({ detail: "Push has already been delivered" }, { status: 409 });
+    }
+    if (push.attempts >= 5) {
+      return HttpResponse.json(
+        { detail: "Push has exhausted its retry attempts" },
+        { status: 409 },
+      );
+    }
+
+    push.status = "queued";
+    push.last_error = null;
+    push.next_attempt_at = new Date().toISOString();
+    const report = reportStore.find((entry) => entry.id === push.report_id);
+    if (report) {
+      report.push_status = "queued";
+    }
+    return HttpResponse.json(push);
   }),
 ];

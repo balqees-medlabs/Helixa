@@ -147,12 +147,12 @@ description: "Task list for Frontend (Spec 3)"
 
 ### Tests ⚠️
 
-- [ ] T040 [P] [US5] `frontend/tests/reports.test.tsx` (MSW) — upload 415/413/409 reasons surfaced; retrieval offered only to admin/bioinformatics/genomics; portal status chip + retry (SC-006)
+- [X] T040 [P] [US5] `frontend/tests/reports.test.tsx` (MSW) — upload 415/413/409 reasons surfaced; retrieval offered only to admin/bioinformatics/genomics; portal status chip + retry (SC-006)
 
 ### Implementation
 
-- [ ] T041 [US5] `frontend/app/(app)/reports/page.tsx` + `frontend/lib/features/reports/` — report upload (multipart, bioinformatics) mapping 409/413/415 to specific messages; metadata + file retrieval gated to the reader roles (admin/bioinformatics/genomics)
-- [ ] T042 [US5] `frontend/components/PortalPushStatus.tsx` — show queued/success/failed from `/portal-pushes/{id}`; admin retry; `refetchInterval = POLL_MS`
+- [X] T041 [US5] `frontend/app/(app)/reports/page.tsx` + `frontend/lib/features/reports/` — report upload (multipart, bioinformatics) mapping 409/413/415 to specific messages; metadata + file retrieval gated to the reader roles (admin/bioinformatics/genomics)
+- [X] T042 [US5] `frontend/components/PortalPushStatus.tsx` — show queued/success/failed from `/portal-pushes/{id}`; admin retry; `refetchInterval = POLL_MS`
 
 **Checkpoint**: end-to-end output path complete in the UI.
 

@@ -254,6 +254,36 @@ export async function apiFetch<P extends ApiPath, M extends ApiMethod = "get">(
   return parseResponse<ApiResponse<P, M>>(response);
 }
 
+export async function apiDownload<P extends ApiPath>(path: P): Promise<Blob> {
+  const url = buildUrl(path);
+  const init: RequestInit = {
+    method: "GET",
+    credentials: "include",
+    headers: { Accept: "*/*" },
+  };
+
+  let response = await fetch(url, init);
+
+  if (response.status === 401) {
+    const refreshed = await refreshSession();
+    if (!refreshed) {
+      notifySessionExpired();
+      throw await toApiError(response);
+    }
+
+    response = await fetch(url, init);
+    if (response.status === 401) {
+      notifySessionExpired();
+    }
+  }
+
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+
+  return response.blob();
+}
+
 export function apiGet<P extends ApiPath>(
   path: P,
   options: Omit<ApiRequestOptions<P, "get">, "method" | "body"> = {},

@@ -121,12 +121,15 @@ async function seedQcPassedSample(apis: Record<E2ERole, APIRequestContext>): Pro
     throw new Error(`Could not seed consent: ${consent.status()} ${await consent.text()}`);
   }
 
+  // The backend's stage→role map (workflow_service.STAGE_ROLES) is the
+  // authority: stage 3 is molecular, not genomics. Consent is posted above,
+  // so the advance into stage 3 passes its gate.
   await advance(apis.genomics, sample.id, 1, "genomics");
-  await advance(apis.genomics, sample.id, 2, "genomics");
-  await advance(apis.molecular, sample.id, 3, "molecular");
-  await advance(apis.bioinformatics, sample.id, 4, "bioinformatics");
+  await advance(apis.molecular, sample.id, 2, "molecular");
+  await advance(apis.bioinformatics, sample.id, 3, "bioinformatics");
+  await advance(apis.trf, sample.id, 4, "trf");
   await advance(apis.trf, sample.id, 5, "trf");
-  await advance(apis.trf, sample.id, 6, "trf");
+  await advance(apis.bioinformatics, sample.id, 6, "bioinformatics");
 
   const qc = await apis.bioinformatics.post(`/api/samples/${sample.id}/qc`, {
     data: { kind: "qc", passed: true, detail: { source: "e2e-seed" } },
