@@ -105,15 +105,15 @@ description: "Task list for Frontend (Spec 3)"
 
 ### Tests ⚠️
 
-- [ ] T030 [P] [US3] `frontend/tests/dashboards.test.tsx` (MSW) — each role dashboard renders its work queue; multi-role default landing + switcher (SC-002 content)
-- [ ] T031 [P] [US3] `frontend/tests/tat-board.test.tsx` (MSW) — samples placed in their stage column; past-target flagged; advance moves the card on refetch (SC-005)
+- [X] T030 [P] [US3] `frontend/tests/dashboards.test.tsx` (MSW) — each role dashboard renders its work queue; multi-role default landing + switcher (SC-002 content)
+- [X] T031 [P] [US3] `frontend/tests/tat-board.test.tsx` (MSW) — samples placed in their stage column; past-target flagged; advance moves the card on refetch (SC-005)
 
 ### Implementation
 
-- [ ] T032 [P] [US3] `frontend/app/(app)/dashboard/page.tsx` + `frontend/lib/features/dashboard/` — role work queues (samples awaiting the role) with counts + breach flags; genomics→intake/consent, molecular→molecular, bioinformatics→data-gen/QC/reporting, admin→all + users/vendors
-- [ ] T033 [US3] Dashboard switcher + default-landing (most privileged) wired to the switcher slot in `(app)/layout.tsx`
-- [ ] T034 [P] [US3] `frontend/app/(app)/board/page.tsx` + `frontend/components/StageBoard.tsx` — 8 stage columns from `/samples` + `/metrics/tat`; cards show case + time-in-stage; past-target flagged; **advance is a gated card action (not drag-and-drop)**; `refetchInterval = POLL_MS`
-- [ ] T035 [P] [US3] `frontend/app/(app)/metrics/page.tsx` — admin TAT metrics (per-stage/18-day breaches, per-vendor), and `PATCH /stages/{id}/sla`
+- [X] T032 [P] [US3] `frontend/app/(app)/dashboard/page.tsx` + `frontend/lib/features/dashboard/` — role work queues (samples awaiting the role) with counts + breach flags; genomics→intake/consent, molecular→molecular, bioinformatics→data-gen/QC/reporting, admin→all + users/vendors
+- [X] T033 [US3] Dashboard switcher + default-landing (most privileged) wired to the switcher slot in `(app)/layout.tsx`
+- [X] T034 [P] [US3] `frontend/app/(app)/board/page.tsx` + `frontend/components/StageBoard.tsx` — 8 stage columns from `/samples` + `/metrics/tat`; cards show case + time-in-stage; past-target flagged; **advance is a gated card action (not drag-and-drop)**; `refetchInterval = POLL_MS`
+- [X] T035 [P] [US3] `frontend/app/(app)/metrics/page.tsx` — admin TAT metrics (per-stage/18-day breaches, per-vendor), and `PATCH /stages/{id}/sla`
 
 **Checkpoint**: dashboards + board deliver the at-a-glance view.
 

@@ -88,6 +88,36 @@ const STAGE_ROLES: Record<number, string[]> = {
   8: ["bioinformatics"],
 };
 
+export const STAGE_IDS: Record<number, string> = {
+  1: "00000000-0000-4000-9000-000000000001",
+  2: "00000000-0000-4000-9000-000000000002",
+  3: "00000000-0000-4000-9000-000000000003",
+  4: "00000000-0000-4000-9000-000000000004",
+  5: "00000000-0000-4000-9000-000000000005",
+  6: "00000000-0000-4000-9000-000000000006",
+  7: "00000000-0000-4000-9000-000000000007",
+  8: "00000000-0000-4000-9000-000000000008",
+};
+
+const DEFAULT_STAGE_SLA: Record<number, number> = {
+  1: 2,
+  2: 3,
+  3: 5,
+  4: 5,
+  5: 3,
+  6: 3,
+  7: 5,
+  8: 3,
+};
+
+export interface TestVendor {
+  id: string;
+  name: string;
+  tat_days: number;
+  tat_anchor: string;
+  is_active: boolean;
+}
+
 const REQUIRED_CONSENT_ITEMS = ["signed_consent", "id_verified", "requisition_received"];
 
 function stageAt(position: number) {
@@ -98,12 +128,37 @@ let sampleStore: TestSample[] = [];
 let eventStore: Record<string, TestSampleEvent[]> = {};
 let consentStore: Record<string, TestConsentItem[]> = {};
 let qcPassed = new Set<string>();
+let vendorStore: TestVendor[] = [];
+let stageSlaStore: Record<number, number> = { ...DEFAULT_STAGE_SLA };
 
 export function resetSamples(): void {
   sampleStore = [];
   eventStore = {};
   consentStore = {};
   qcPassed = new Set<string>();
+  vendorStore = [];
+  stageSlaStore = { ...DEFAULT_STAGE_SLA };
+}
+
+export interface SeedVendorOptions {
+  id?: string;
+  name?: string;
+  tatDays?: number;
+  tatAnchor?: string;
+  isActive?: boolean;
+}
+
+export function seedVendor(options: SeedVendorOptions = {}): TestVendor {
+  const id = options.id ?? crypto.randomUUID();
+  const vendor: TestVendor = {
+    id,
+    name: options.name ?? `Vendor ${id.slice(0, 4)}`,
+    tat_days: options.tatDays ?? 21,
+    tat_anchor: options.tatAnchor ?? "receipt",
+    is_active: options.isActive ?? true,
+  };
+  vendorStore.push(vendor);
+  return vendor;
 }
 
 export function setQcPassed(sampleId: string, passed = true): void {
@@ -128,8 +183,12 @@ function consentFor(sampleId: string): components["schemas"]["ConsentOut"] {
   };
 }
 
-function buildEvents(sampleId: string, stagePosition: number): TestSampleEvent[] {
-  const base = Date.parse("2026-11-01T09:00:00Z");
+function buildEvents(
+  sampleId: string,
+  stagePosition: number,
+  receivedAt: string,
+): TestSampleEvent[] {
+  const base = Date.parse(receivedAt);
   const events: TestSampleEvent[] = [];
 
   for (let position = 1; position <= stagePosition; position += 1) {
@@ -154,25 +213,27 @@ export interface SeedSampleOptions {
   status?: string;
   externalRef?: string | null;
   consentComplete?: boolean;
+  receivedAt?: string;
+  vendorId?: string | null;
 }
 
 export function seedSample(options: SeedSampleOptions = {}): TestSample {
   const id = options.id ?? crypto.randomUUID();
   const stage = stageAt(options.stage ?? 1);
-  const receivedAt = "2026-11-01T09:00:00Z";
+  const receivedAt = options.receivedAt ?? "2026-11-01T09:00:00Z";
 
   const sample: TestSample = {
     id,
     case_id: options.caseId ?? `CASE-${id.slice(0, 8)}`,
     external_ref: options.externalRef ?? null,
-    vendor_id: null,
+    vendor_id: options.vendorId ?? null,
     received_at: receivedAt,
     status: options.status ?? "active",
     current_stage: stage,
   };
 
   sampleStore.unshift(sample);
-  eventStore[id] = buildEvents(id, stage.position);
+  eventStore[id] = buildEvents(id, stage.position, receivedAt);
   consentStore[id] = REQUIRED_CONSENT_ITEMS.map((item) => ({
     item,
     required: true,
@@ -189,6 +250,94 @@ function findSample(sampleId: string | readonly string[] | undefined): TestSampl
 }
 
 const notFound = () => HttpResponse.json({ detail: "Sample not found" }, { status: 404 });
+
+const forbidden = (detail: string) => HttpResponse.json({ detail }, { status: 403 });
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function buildTatMetrics(): components["schemas"]["TatMetrics"] {
+  const now = Date.now();
+
+  const samples = sampleStore.map((sample) => {
+    const events = eventStore[sample.id] ?? [];
+    const stages = events.map((event, index) => {
+      const following = events[index + 1];
+      const hours = following
+        ? (Date.parse(following.entered_at) - Date.parse(event.entered_at)) / 3_600_000
+        : (now - Date.parse(event.entered_at)) / 3_600_000;
+      const slaDays = stageSlaStore[event.stage.position] ?? null;
+
+      return {
+        stage_id: STAGE_IDS[event.stage.position],
+        position: event.stage.position,
+        slug: event.stage.slug,
+        name: event.stage.name,
+        sla_days: slaDays,
+        duration_hours: round2(hours),
+        breached: slaDays != null ? hours > slaDays * 24 : null,
+      };
+    });
+
+    const elapsedDays = Math.max(0, (now - Date.parse(sample.received_at)) / 86_400_000);
+    const workingDays = Math.floor((elapsedDays * 5) / 7);
+    const vendor = vendorStore.find((entry) => entry.id === sample.vendor_id);
+
+    let vendorMetric: components["schemas"]["VendorSampleMetric"] | null = null;
+    if (vendor) {
+      const anchorAt =
+        vendor.tat_anchor === "receipt"
+          ? sample.received_at
+          : (events.find((event) => event.stage.position === 4)?.entered_at ?? null);
+      const elapsedVendorDays =
+        anchorAt != null ? round2((now - Date.parse(anchorAt)) / 86_400_000) : null;
+      vendorMetric = {
+        id: vendor.id,
+        name: vendor.name,
+        tat_days: vendor.tat_days,
+        tat_anchor: vendor.tat_anchor,
+        anchor_at: anchorAt,
+        elapsed_days: elapsedVendorDays,
+        breached: elapsedVendorDays != null ? elapsedVendorDays > vendor.tat_days : null,
+      };
+    }
+
+    return {
+      sample_id: sample.id,
+      case_id: sample.case_id,
+      status: sample.status,
+      current_stage: sample.current_stage,
+      received_at: sample.received_at,
+      elapsed_calendar_days: round2(elapsedDays),
+      elapsed_working_days: workingDays,
+      target_days: 18,
+      target_breached: elapsedDays > 18,
+      baseline_working_days: 45,
+      baseline_breached: workingDays > 45,
+      stages,
+      vendor: vendorMetric,
+    };
+  });
+
+  return {
+    generated_at: new Date(now).toISOString(),
+    target_days: 18,
+    baseline_working_days: 45,
+    samples,
+    vendors: vendorStore.map((vendor) => {
+      const assigned = samples.filter((sample) => sample.vendor?.id === vendor.id);
+      return {
+        vendor_id: vendor.id,
+        name: vendor.name,
+        tat_days: vendor.tat_days,
+        tat_anchor: vendor.tat_anchor,
+        assigned_samples: assigned.length,
+        breached_samples: assigned.filter((sample) => sample.vendor?.breached).length,
+      };
+    }),
+  };
+}
 
 export const handlers = [
   http.post("/api/auth/login", async ({ request }) => {
@@ -391,4 +540,55 @@ export const handlers = [
 
     return HttpResponse.json(updated);
   }),
+
+  http.get("/api/metrics/tat", () => {
+    if (!currentUser?.roles.includes("admin")) {
+      return forbidden("Only administrators may view turnaround metrics");
+    }
+    return HttpResponse.json(buildTatMetrics());
+  }),
+
+  http.patch("/api/stages/:stageId/sla", async ({ params, request }) => {
+    if (!currentUser?.roles.includes("admin")) {
+      return forbidden("Only administrators may update stage SLAs");
+    }
+
+    const position = Number(Object.entries(STAGE_IDS).find(([, id]) => id === params.stageId)?.[0]);
+    if (!position) {
+      return HttpResponse.json({ detail: "Stage not found" }, { status: 404 });
+    }
+
+    const body = (await request.json()) as components["schemas"]["SlaUpdate"];
+    stageSlaStore[position] = body.sla_days;
+    const stage = stageAt(position);
+
+    return HttpResponse.json({
+      stage_id: STAGE_IDS[position],
+      position: stage.position,
+      slug: stage.slug,
+      name: stage.name,
+      sla_days: body.sla_days,
+      updated_at: new Date().toISOString(),
+    });
+  }),
+
+  http.get("/api/users", ({ request }) => {
+    if (!currentUser?.roles.includes("admin")) {
+      return forbidden("Only administrators may list users");
+    }
+
+    const url = new URL(request.url);
+    const limit = Number(url.searchParams.get("limit") ?? 50);
+    const offset = Number(url.searchParams.get("offset") ?? 0);
+    const users = Object.values(TEST_USERS);
+
+    return HttpResponse.json({
+      items: users.slice(offset, offset + limit),
+      total: users.length,
+      limit,
+      offset,
+    });
+  }),
+
+  http.get("/api/vendors", () => HttpResponse.json(vendorStore)),
 ];

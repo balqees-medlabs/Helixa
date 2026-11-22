@@ -1,6 +1,7 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { DashboardSwitcher } from "@/components/DashboardSwitcher";
 import { RoleNav } from "@/components/RoleNav";
 
 import {
@@ -55,7 +56,12 @@ const EXPECTED_NAV: Record<RoleSlug, string[]> = {
 
 async function renderSignedIn(role: RoleSlug) {
   signInAs(role);
-  renderWithAuth(<RoleNav />);
+  renderWithAuth(
+    <>
+      <RoleNav />
+      <DashboardSwitcher />
+    </>,
+  );
   await screen.findByText(TEST_USERS[role].display_name);
 }
 
@@ -99,7 +105,12 @@ describe("role-bound navigation (SC-002)", () => {
       roles: ["genomics", "bioinformatics"],
     });
 
-    renderWithAuth(<RoleNav />);
+    renderWithAuth(
+      <>
+        <RoleNav />
+        <DashboardSwitcher />
+      </>,
+    );
     await screen.findByText("Multi Role");
 
     for (const label of [

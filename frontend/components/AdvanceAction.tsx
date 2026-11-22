@@ -16,10 +16,12 @@ export function AdvanceAction({
   sampleId,
   fromStage,
   status,
+  compact = false,
 }: {
   sampleId: string;
   fromStage: number;
   status: string;
+  compact?: boolean;
 }) {
   const advance = useAdvanceSample(sampleId);
   const [error, setError] = useState<string | null>(null);
@@ -53,18 +55,22 @@ export function AdvanceAction({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">
-        Advancing moves the sample to the next stage. The backend checks every gate and the reason
-        for any refusal is shown here.
-      </p>
+      {compact ? null : (
+        <p className="text-sm text-muted-foreground">
+          Advancing moves the sample to the next stage. The backend checks every gate and the reason
+          for any refusal is shown here.
+        </p>
+      )}
       <GateError detail={error} />
       <SubmitButton
         type="button"
         pending={advance.isPending}
         pendingLabel="Advancing…"
+        variant={compact ? "outline" : "primary"}
+        className={compact ? "px-2 py-1 text-xs" : undefined}
         onClick={handleAdvance}
       >
-        Advance sample
+        {compact ? "Advance" : "Advance sample"}
       </SubmitButton>
     </div>
   );

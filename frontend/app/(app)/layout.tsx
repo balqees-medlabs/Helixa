@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
+import { DashboardSwitcher } from "@/components/DashboardSwitcher";
 import { RoleNav } from "@/components/RoleNav";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { isSignedIn, loginRedirect } from "@/lib/auth/guards";
@@ -45,8 +46,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div
           id="dashboard-switcher"
           data-dashboard-switcher
-          className="border-b border-border bg-card"
-        />
+          className="border-b border-border bg-card px-6 py-2 empty:hidden"
+        >
+          <Suspense fallback={null}>
+            <DashboardSwitcher />
+          </Suspense>
+        </div>
       </header>
       <main className="container flex-1 py-8">{children}</main>
     </div>

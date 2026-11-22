@@ -7,7 +7,6 @@ import { useState } from "react";
 import { SubmitButton } from "@/components/SubmitButton";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { requireRoles } from "@/lib/auth/guards";
-import { dashboardViewsForRoles } from "@/lib/auth/roles";
 import { sentenceCase } from "@/lib/i18n/dir";
 import { cn } from "@/lib/utils";
 
@@ -39,36 +38,6 @@ function isActive(pathname: string, item: NavItem): boolean {
     return false;
   }
   return pathname === item.href || (!item.exact && pathname.startsWith(`${item.href}/`));
-}
-
-function DashboardSwitcher({ roles }: { roles: readonly string[] }) {
-  const pathname = usePathname();
-  const views = dashboardViewsForRoles(roles);
-
-  if (views.length < 2) {
-    return null;
-  }
-
-  return (
-    <nav
-      aria-label="Dashboards"
-      className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground"
-    >
-      <span className="font-medium uppercase tracking-wide">Dashboards</span>
-      {views.map((view) => (
-        <Link
-          key={view.slug}
-          href={view.href}
-          className={cn(
-            "rounded-sm px-1 py-0.5 transition-colors hover:text-brand",
-            pathname === "/dashboard" ? "text-foreground" : "text-muted-foreground",
-          )}
-        >
-          {view.label}
-        </Link>
-      ))}
-    </nav>
-  );
 }
 
 export function RoleNav() {
@@ -120,7 +89,6 @@ export function RoleNav() {
             );
           })}
         </nav>
-        <DashboardSwitcher roles={roles} />
       </div>
 
       <div className="flex items-center gap-4 text-sm">
