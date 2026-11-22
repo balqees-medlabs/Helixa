@@ -9,15 +9,18 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { isSignedIn, loginRedirect } from "@/lib/auth/guards";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, signedOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isSignedIn(user)) {
+    // After an explicit sign-out, RoleNav navigates to plain /login; a
+    // `?next=` redirect here would race it (the shell used to land on
+    // /login?next=... on sign-out). Session expiry keeps the ?next= return.
+    if (!isLoading && !isSignedIn(user) && !signedOut) {
       router.replace(loginRedirect(pathname, window.location.search));
     }
-  }, [isLoading, user, pathname, router]);
+  }, [isLoading, user, pathname, router, signedOut]);
 
   if (isLoading) {
     return (

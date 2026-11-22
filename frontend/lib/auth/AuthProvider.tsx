@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useMemo } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { resetSessionExpiredState, setSessionExpiredHandler } from "@/lib/api/client";
@@ -15,6 +15,9 @@ interface AuthContextValue {
   user: SessionUser | null;
   roles: string[];
   isLoading: boolean;
+  /** True while an explicit sign-out is in flight or done; the shell then
+   * navigates to /login itself (RoleNav) rather than the `?next=` redirect. */
+  signedOut: boolean;
   can: (...slugs: string[]) => boolean;
   login: (email: string, password: string) => Promise<SessionUser>;
   logout: () => Promise<void>;
@@ -38,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const user = sessionQuery.data ?? null;
   const roles = useMemo(() => user?.roles ?? [], [user]);
+  const [signedOut, setSignedOut] = useState(false);
 
   const can = useCallback(
     (...slugs: string[]) => {
@@ -52,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (email: string, password: string) => {
       const nextUser = await authService.login(email, password);
+      setSignedOut(false);
       resetSessionExpiredState();
       queryClient.setQueryData(ME_QUERY_KEY, nextUser);
       return nextUser;
@@ -60,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    setSignedOut(true);
     try {
       await authService.logout();
     } finally {
@@ -88,11 +94,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       roles,
       isLoading: sessionQuery.isLoading,
+      signedOut,
       can,
       login,
       logout,
     }),
-    [user, roles, sessionQuery.isLoading, can, login, logout],
+    [user, roles, sessionQuery.isLoading, signedOut, can, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

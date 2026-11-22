@@ -160,10 +160,10 @@ description: "Task list for Frontend (Spec 3)"
 
 ## Phase 8: Polish & Cross-Cutting
 
-- [ ] T043 [P] Wire `check:contract` into CI + a test so a backend contract change that isn't regenerated fails the build (SC-008)
-- [ ] T044 [P] Accessibility & RTL pass: verify WCAG-AA contrast on primary text/controls and that nav/board/forms mirror correctly under `dir="rtl"` (SC-007); add an RTL rendering test
-- [ ] T045 [P] `frontend/README.md` — run dev + proxy, `gen:client`/`check:contract`, test + e2e commands, the cookie-path note (research D1)
-- [ ] T046 Run the full `quickstart.md` validation (steps 1–8) against a live backend; confirm SC-001…SC-008
+- [X] T043 [P] Wire `check:contract` into CI + a test so a backend contract change that isn't regenerated fails the build (SC-008)
+- [X] T044 [P] Accessibility & RTL pass: verify WCAG-AA contrast on primary text/controls and that nav/board/forms mirror correctly under `dir="rtl"` (SC-007); add an RTL rendering test
+- [X] T045 [P] `frontend/README.md` — run dev + proxy, `gen:client`/`check:contract`, test + e2e commands, the cookie-path note (research D1)
+- [X] T046 Run the full `quickstart.md` validation (steps 1–8) against a live backend; confirm SC-001…SC-008
 
 ---
 

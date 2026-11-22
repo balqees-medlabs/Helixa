@@ -39,10 +39,10 @@
     --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 55% 34%;
+    --success: 152 55% 30%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 42%;
+    --warning: 38 92% 30%;
     --warning-foreground: 0 0% 100%;
 
     --border: 220 13% 89%;
