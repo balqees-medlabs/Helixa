@@ -118,6 +118,13 @@ export interface TestVendor {
   is_active: boolean;
 }
 
+export interface TestBatch {
+  id: string;
+  name: string;
+  created_by: string;
+  member_ids: string[];
+}
+
 const REQUIRED_CONSENT_ITEMS = ["signed_consent", "id_verified", "requisition_received"];
 
 function stageAt(position: number) {
@@ -129,6 +136,7 @@ let eventStore: Record<string, TestSampleEvent[]> = {};
 let consentStore: Record<string, TestConsentItem[]> = {};
 let qcPassed = new Set<string>();
 let vendorStore: TestVendor[] = [];
+let batchStore: TestBatch[] = [];
 let stageSlaStore: Record<number, number> = { ...DEFAULT_STAGE_SLA };
 
 export function resetSamples(): void {
@@ -137,6 +145,7 @@ export function resetSamples(): void {
   consentStore = {};
   qcPassed = new Set<string>();
   vendorStore = [];
+  batchStore = [];
   stageSlaStore = { ...DEFAULT_STAGE_SLA };
 }
 
@@ -339,6 +348,99 @@ function buildTatMetrics(): components["schemas"]["TatMetrics"] {
   };
 }
 
+type AdvanceBody = components["schemas"]["AdvanceRequest"];
+
+type AdvanceOutcome =
+  | { status: "advanced"; sample: TestSample }
+  | { status: "conflict" | "gate_failed" | "forbidden" | "not_found"; detail: string };
+
+function hasRole(...roles: string[]): boolean {
+  if (!currentUser) {
+    return false;
+  }
+  return (
+    currentUser.roles.includes("admin") || roles.some((role) => currentUser!.roles.includes(role))
+  );
+}
+
+function attemptAdvance(sampleId: string, body: AdvanceBody): AdvanceOutcome {
+  const sample = findSample(sampleId);
+  if (!sample) {
+    return { status: "not_found", detail: "Sample not found" };
+  }
+  const user = currentUser;
+  if (!user) {
+    return { status: "forbidden", detail: "Not authenticated" };
+  }
+
+  if (sample.status !== "active") {
+    return {
+      status: "conflict",
+      detail: `Sample is ${sample.status}; only active samples can advance`,
+    };
+  }
+
+  if (sample.current_stage.position !== body.from_stage) {
+    return {
+      status: "conflict",
+      detail: `Sample has already advanced to stage ${sample.current_stage.position}; refresh and retry`,
+    };
+  }
+
+  const targetPosition = body.from_stage + 1;
+  if (body.to_stage != null && body.to_stage !== targetPosition) {
+    return {
+      status: "conflict",
+      detail: `Cannot skip stages: ${body.from_stage} -> ${body.to_stage}; expected ${targetPosition}`,
+    };
+  }
+  if (targetPosition > 8) {
+    return { status: "conflict", detail: "Sample is already at the final stage" };
+  }
+
+  const allowed = STAGE_ROLES[targetPosition] ?? [];
+  if (!user.roles.includes("admin") && !allowed.some((role) => user.roles.includes(role))) {
+    return {
+      status: "forbidden",
+      detail: `Advancing to stage ${targetPosition} requires: ${allowed.join(", ") || "admin"}`,
+    };
+  }
+
+  if (targetPosition === 3 && !requiredComplete(sample.id)) {
+    return {
+      status: "gate_failed",
+      detail: "Consent checklist incomplete: every required item must be complete",
+    };
+  }
+  if (targetPosition === 8 && !qcPassed.has(sample.id)) {
+    return {
+      status: "gate_failed",
+      detail: "Quality control must be passed before report/archive",
+    };
+  }
+
+  const nextStage = stageAt(targetPosition);
+  const updated: TestSample = { ...sample, current_stage: nextStage };
+  sampleStore = sampleStore.map((entry) => (entry.id === sample.id ? updated : entry));
+
+  const events = eventStore[sample.id] ?? [];
+  if (events.length > 0) {
+    const last = events[events.length - 1];
+    events[events.length - 1] = { ...last, duration_hours: 24 };
+  }
+  events.push({
+    id: crypto.randomUUID(),
+    stage: nextStage,
+    entered_at: new Date().toISOString(),
+    duration_hours: null,
+    actor_id: user.id,
+    note: body.note ?? null,
+  });
+  eventStore[sample.id] = events;
+
+  return { status: "advanced", sample: updated };
+}
+
 export const handlers = [
   http.post("/api/auth/login", async ({ request }) => {
     const body = (await request.json()) as { email?: string; password?: string };
@@ -454,91 +556,52 @@ export const handlers = [
   }),
 
   http.post("/api/samples/:sampleId/advance", async ({ params, request }) => {
-    const sample = findSample(params.sampleId);
-    if (!sample) {
-      return notFound();
-    }
     if (!currentUser) {
       return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
     }
 
     const body = (await request.json()) as components["schemas"]["AdvanceRequest"];
+    const outcome = attemptAdvance(String(params.sampleId), body);
 
-    if (sample.status !== "active") {
-      return HttpResponse.json(
-        { detail: `Sample is ${sample.status}; only active samples can advance` },
-        { status: 409 },
-      );
+    switch (outcome.status) {
+      case "advanced":
+        return HttpResponse.json(outcome.sample);
+      case "not_found":
+        return notFound();
+      case "forbidden":
+        return forbidden(outcome.detail);
+      default:
+        return HttpResponse.json({ detail: outcome.detail }, { status: 409 });
     }
+  }),
 
-    if (sample.current_stage.position !== body.from_stage) {
-      return HttpResponse.json(
-        {
-          detail: `Sample has already advanced to stage ${sample.current_stage.position}; refresh and retry`,
-        },
-        { status: 409 },
-      );
+  http.post("/api/samples/:sampleId/qc", async ({ params, request }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
     }
-
-    const targetPosition = body.from_stage + 1;
-    if (body.to_stage != null && body.to_stage !== targetPosition) {
-      return HttpResponse.json(
-        {
-          detail: `Cannot skip stages: ${body.from_stage} -> ${body.to_stage}; expected ${targetPosition}`,
-        },
-        { status: 409 },
-      );
+    const user = currentUser;
+    if (!hasRole("bioinformatics")) {
+      return forbidden("Insufficient role");
     }
-    if (targetPosition > 8) {
-      return HttpResponse.json({ detail: "Sample is already at the final stage" }, { status: 409 });
+    const sample = findSample(params.sampleId);
+    if (!sample) {
+      return notFound();
     }
 
-    const allowed = STAGE_ROLES[targetPosition] ?? [];
-    if (
-      !currentUser.roles.includes("admin") &&
-      !allowed.some((role) => currentUser?.roles.includes(role))
-    ) {
-      return HttpResponse.json(
-        {
-          detail: `Advancing to stage ${targetPosition} requires: ${allowed.join(", ") || "admin"}`,
-        },
-        { status: 403 },
-      );
+    const body = (await request.json()) as components["schemas"]["QcCreate"];
+    if (body.kind === "qc") {
+      setQcPassed(sample.id, body.passed);
     }
 
-    if (targetPosition === 3 && !requiredComplete(sample.id)) {
-      return HttpResponse.json(
-        { detail: "Consent checklist incomplete: every required item must be complete" },
-        { status: 409 },
-      );
-    }
-    if (targetPosition === 8 && !qcPassed.has(sample.id)) {
-      return HttpResponse.json(
-        { detail: "Quality control must be passed before report/archive" },
-        { status: 409 },
-      );
-    }
-
-    const nextStage = stageAt(targetPosition);
-    const updated: TestSample = { ...sample, current_stage: nextStage };
-    sampleStore = sampleStore.map((entry) => (entry.id === sample.id ? updated : entry));
-
-    const events = eventStore[sample.id] ?? [];
-    if (events.length > 0) {
-      const last = events[events.length - 1];
-      events[events.length - 1] = { ...last, duration_hours: 24 };
-    }
-    events.push({
+    return HttpResponse.json({
       id: crypto.randomUUID(),
-      stage: nextStage,
-      entered_at: new Date().toISOString(),
-      duration_hours: null,
-      actor_id: currentUser.id,
-      note: body.note ?? null,
+      sample_id: sample.id,
+      kind: body.kind,
+      passed: body.passed,
+      detail: body.detail ?? {},
+      recorded_by: user.id,
+      recorded_at: new Date().toISOString(),
     });
-    eventStore[sample.id] = events;
-
-    return HttpResponse.json(updated);
   }),
 
   http.get("/api/metrics/tat", () => {
@@ -590,5 +653,143 @@ export const handlers = [
     });
   }),
 
+  http.post("/api/batches", async ({ request }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    }
+    const user = currentUser;
+    if (!hasRole("genomics", "bioinformatics")) {
+      return forbidden("Insufficient role");
+    }
+
+    const body = (await request.json()) as components["schemas"]["BatchCreate"];
+    const batch: TestBatch = {
+      id: crypto.randomUUID(),
+      name: body.name,
+      created_by: user.id,
+      member_ids: [],
+    };
+    batchStore.push(batch);
+    return HttpResponse.json(batch, { status: 201 });
+  }),
+
+  http.post("/api/batches/:batchId/members", async ({ params, request }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    }
+    if (!hasRole("genomics", "bioinformatics")) {
+      return forbidden("Insufficient role");
+    }
+    const batch = batchStore.find((entry) => entry.id === params.batchId);
+    if (!batch) {
+      return HttpResponse.json({ detail: "Batch not found" }, { status: 404 });
+    }
+
+    const body = (await request.json()) as components["schemas"]["BatchMembers"];
+    for (const sampleId of body.sample_ids) {
+      if (!findSample(sampleId)) {
+        return notFound();
+      }
+      if (!batch.member_ids.includes(sampleId)) {
+        batch.member_ids.push(sampleId);
+      }
+    }
+    return HttpResponse.json(batch);
+  }),
+
+  http.post("/api/batches/:batchId/advance", async ({ params, request }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    }
+    const batch = batchStore.find((entry) => entry.id === params.batchId);
+    if (!batch) {
+      return HttpResponse.json({ detail: "Batch not found" }, { status: 404 });
+    }
+
+    const body = (await request.json()) as components["schemas"]["BatchAdvanceRequest"];
+    const results = batch.member_ids.map((sampleId) => {
+      const sample = findSample(sampleId);
+      const fromStage = body.from_stage ?? sample?.current_stage.position ?? 1;
+      const outcome = attemptAdvance(sampleId, { ...body, from_stage: fromStage });
+      if (outcome.status === "advanced") {
+        return {
+          sample_id: sampleId,
+          status: "advanced",
+          detail: null,
+          from_stage: fromStage,
+          to_stage: outcome.sample.current_stage.position,
+        };
+      }
+      return {
+        sample_id: sampleId,
+        status: outcome.status,
+        detail: outcome.detail,
+        from_stage: fromStage,
+        to_stage: null,
+      };
+    });
+
+    return HttpResponse.json(results);
+  }),
+
   http.get("/api/vendors", () => HttpResponse.json(vendorStore)),
+
+  http.post("/api/vendors", async ({ request }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    }
+    if (!hasRole("admin")) {
+      return forbidden("Insufficient role");
+    }
+
+    const body = (await request.json()) as components["schemas"]["VendorCreate"];
+    if (vendorStore.some((vendor) => vendor.name === body.name)) {
+      return HttpResponse.json({ detail: `Vendor ${body.name} already exists` }, { status: 409 });
+    }
+
+    const vendor = seedVendor({
+      name: body.name,
+      tatDays: body.tat_days,
+      tatAnchor: body.tat_anchor,
+      isActive: body.is_active,
+    });
+    return HttpResponse.json(vendor, { status: 201 });
+  }),
+
+  http.patch("/api/vendors/:vendorId", async ({ params, request }) => {
+    if (!currentUser) {
+      return HttpResponse.json({ detail: "Not authenticated" }, { status: 401 });
+    }
+    if (!hasRole("admin")) {
+      return forbidden("Insufficient role");
+    }
+
+    const vendor = vendorStore.find((entry) => entry.id === params.vendorId);
+    if (!vendor) {
+      return HttpResponse.json({ detail: "Vendor not found" }, { status: 404 });
+    }
+
+    const body = (await request.json()) as components["schemas"]["VendorUpdate"];
+    if (
+      body.name &&
+      vendorStore.some((entry) => entry.id !== vendor.id && entry.name === body.name)
+    ) {
+      return HttpResponse.json({ detail: `Vendor ${body.name} already exists` }, { status: 409 });
+    }
+
+    if (body.name != null) {
+      vendor.name = body.name;
+    }
+    if (body.tat_days != null) {
+      vendor.tat_days = body.tat_days;
+    }
+    if (body.tat_anchor != null) {
+      vendor.tat_anchor = body.tat_anchor;
+    }
+    if (body.is_active != null) {
+      vendor.is_active = body.is_active;
+    }
+
+    return HttpResponse.json(vendor);
+  }),
 ];

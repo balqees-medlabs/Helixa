@@ -9,7 +9,8 @@ import { BOARD_QUERY_KEY, METRICS_QUERY_KEY } from "@/lib/features/samples/queri
 export type TatMetrics = components["schemas"]["TatMetrics"];
 export type SampleTat = components["schemas"]["SampleTat"];
 export type StageMetric = components["schemas"]["StageMetric"];
-export type Vendor = components["schemas"]["VendorOut"];
+
+export { useVendors } from "@/lib/features/vendors/queries";
 
 export const USER_COUNT_QUERY_KEY = ["users", "count"] as const;
 
@@ -41,14 +42,6 @@ export function useUserCount({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: USER_COUNT_QUERY_KEY,
     queryFn: () => apiFetch("/users", { query: { limit: 1, offset: 0 } }),
-    enabled,
-  });
-}
-
-export function useVendors({ enabled = true }: { enabled?: boolean } = {}) {
-  return useQuery({
-    queryKey: ["vendors"],
-    queryFn: () => apiFetch("/vendors"),
     enabled,
   });
 }

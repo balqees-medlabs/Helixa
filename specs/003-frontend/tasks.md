@@ -127,13 +127,13 @@ description: "Task list for Frontend (Spec 3)"
 
 ### Tests ⚠️
 
-- [ ] T036 [P] [US4] `frontend/tests/batches.test.tsx` (MSW) — batch advance renders a per-member result list (advanced/conflict/gate_failed/forbidden) with reasons; a failing member doesn't block others (FR-015)
+- [X] T036 [P] [US4] `frontend/tests/batches.test.tsx` (MSW) — batch advance renders a per-member result list (advanced/conflict/gate_failed/forbidden) with reasons; a failing member doesn't block others (FR-015)
 
 ### Implementation
 
-- [ ] T037 [P] [US4] `frontend/app/(app)/qc/page.tsx` — record `POST /samples/{id}/qc` (`kind` data_generation|qc, passed, detail); bioinformatics/admin only
-- [ ] T038 [P] [US4] `frontend/app/(app)/batches/page.tsx` + `frontend/lib/features/batches/` — create batch, add members, batch advance; render the per-member `BatchResult` list
-- [ ] T039 [P] [US4] `frontend/app/(app)/vendors/page.tsx` — list (any role, read) + create/edit (admin) via `/vendors`
+- [X] T037 [P] [US4] `frontend/app/(app)/qc/page.tsx` — record `POST /samples/{id}/qc` (`kind` data_generation|qc, passed, detail); bioinformatics/admin only
+- [X] T038 [P] [US4] `frontend/app/(app)/batches/page.tsx` + `frontend/lib/features/batches/` — create batch, add members, batch advance; render the per-member `BatchResult` list
+- [X] T039 [P] [US4] `frontend/app/(app)/vendors/page.tsx` — list (any role, read) + create/edit (admin) via `/vendors`
 
 **Checkpoint**: operational entry screens complete.
 
