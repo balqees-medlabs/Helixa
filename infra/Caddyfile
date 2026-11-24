@@ -1,0 +1,34 @@
+# Helixa reverse proxy (research D1, Spec 3 T006).
+#
+# Same-origin deployment: the SPA is served at `/`, the Spec 2 backend at `/api`
+# with the prefix stripped. No backend change is needed.
+#
+# The backend's refresh cookie is `Path=/auth`; behind the proxy the browser
+# must send it to `/api/auth/refresh`, so rewrite that Set-Cookie path on
+# `/api/auth/*` responses only. The access cookie already has `Path=/`.
+#
+# Environment: CADDY_SITE_ADDRESS, BACKEND_UPSTREAM, FRONTEND_UPSTREAM.
+{
+	admin off
+}
+
+{$CADDY_SITE_ADDRESS:https://localhost} {
+	tls internal
+	encode zstd gzip
+
+	handle /api/auth/* {
+		uri strip_prefix /api
+		reverse_proxy {$BACKEND_UPSTREAM:127.0.0.1:8000} {
+			header_down Set-Cookie "Path=/auth" "Path=/api/auth"
+		}
+	}
+
+	handle /api/* {
+		uri strip_prefix /api
+		reverse_proxy {$BACKEND_UPSTREAM:127.0.0.1:8000}
+	}
+
+	handle {
+		reverse_proxy {$FRONTEND_UPSTREAM:127.0.0.1:3001}
+	}
+}
