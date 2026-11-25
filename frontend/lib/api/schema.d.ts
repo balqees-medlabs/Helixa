@@ -419,6 +419,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/samples/{sample_id}/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Coverage */
+        get: operations["list_coverage_samples__sample_id__coverage_get"];
+        put?: never;
+        /** Post Coverage */
+        post: operations["post_coverage_samples__sample_id__coverage_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/samples/{sample_id}/events": {
         parameters: {
             query?: never;
@@ -430,6 +448,24 @@ export interface paths {
         get: operations["list_events_samples__sample_id__events_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/samples/{sample_id}/pipeline-results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Pipeline Results */
+        get: operations["list_pipeline_results_samples__sample_id__pipeline_results_get"];
+        put?: never;
+        /** Post Pipeline Result */
+        post: operations["post_pipeline_result_samples__sample_id__pipeline_results_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -763,6 +799,54 @@ export interface components {
             /** Items */
             items: components["schemas"]["ConsentItemIn"][];
         };
+        /** CoverageCreate */
+        CoverageCreate: {
+            /** Depth X */
+            depth_x: number;
+            /** Idempotency Key */
+            idempotency_key: string;
+            /** Read Pairs */
+            read_pairs: number;
+            /** Target X */
+            target_x: number;
+            /** Yield Gb */
+            yield_gb: number;
+        };
+        /** CoverageOut */
+        CoverageOut: {
+            /** Depth X */
+            depth_x: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Idempotency Key */
+            idempotency_key: string;
+            /**
+             * Pipeline Sample Id
+             * Format: uuid
+             */
+            pipeline_sample_id: string;
+            /** Read Pairs */
+            read_pairs: number;
+            /**
+             * Reported At
+             * Format: date-time
+             */
+            reported_at: string;
+            /**
+             * Reported By
+             * Format: uuid
+             */
+            reported_by: string;
+            /** Target X */
+            target_x: number;
+            /** Verdict */
+            verdict: string;
+            /** Yield Gb */
+            yield_gb: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -824,6 +908,83 @@ export interface components {
             offset: number;
             /** Total */
             total: number;
+        };
+        /** PipelineResultCreate */
+        PipelineResultCreate: {
+            /** Detail */
+            detail?: {
+                [key: string]: unknown;
+            };
+            /** Idempotency Key */
+            idempotency_key: string;
+            /** Integrity Ok */
+            integrity_ok?: boolean | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "ingest" | "conversion" | "augmentation";
+            /** Plan Match */
+            plan_match?: boolean | null;
+            /** Q30 */
+            q30?: number | null;
+            /** Read Length */
+            read_length?: number | null;
+            /** Reads Assigned Pct */
+            reads_assigned_pct?: number | null;
+            /** Source Run Ids */
+            source_run_ids?: string[] | null;
+            /**
+             * Status
+             * @default ok
+             * @enum {string}
+             */
+            status: "ok" | "failed";
+        };
+        /** PipelineResultOut */
+        PipelineResultOut: {
+            /** Detail */
+            detail: {
+                [key: string]: unknown;
+            };
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Idempotency Key */
+            idempotency_key: string;
+            /** Integrity Ok */
+            integrity_ok: boolean | null;
+            /** Kind */
+            kind: string;
+            /**
+             * Pipeline Sample Id
+             * Format: uuid
+             */
+            pipeline_sample_id: string;
+            /** Plan Match */
+            plan_match: boolean | null;
+            /** Q30 */
+            q30: number | null;
+            /** Read Length */
+            read_length: number | null;
+            /** Reads Assigned Pct */
+            reads_assigned_pct: number | null;
+            /**
+             * Reported At
+             * Format: date-time
+             */
+            reported_at: string;
+            /**
+             * Reported By
+             * Format: uuid
+             */
+            reported_by: string;
+            /** Source Run Ids */
+            source_run_ids: string[] | null;
+            /** Status */
+            status: string;
         };
         /** PipelineSampleCreate */
         PipelineSampleCreate: {
@@ -2190,6 +2351,72 @@ export interface operations {
             };
         };
     };
+    list_coverage_samples__sample_id__coverage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sample_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoverageOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_coverage_samples__sample_id__coverage_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sample_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CoverageCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoverageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_events_samples__sample_id__events_get: {
         parameters: {
             query?: never;
@@ -2208,6 +2435,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SampleEventOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_pipeline_results_samples__sample_id__pipeline_results_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sample_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineResultOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_pipeline_result_samples__sample_id__pipeline_results_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sample_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineResultCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineResultOut"];
                 };
             };
             /** @description Validation Error */

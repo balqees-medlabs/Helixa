@@ -13,6 +13,7 @@ from app.api import (
     auth,
     batches,
     metrics,
+    pipeline,
     qc,
     reports,
     roles,
@@ -47,6 +48,7 @@ app.include_router(users.router)
 app.include_router(roles.router)
 app.include_router(api_tokens.router)
 app.include_router(runs.router)
+app.include_router(pipeline.router)
 app.include_router(samples.router)
 app.include_router(qc.router)
 app.include_router(batches.router)

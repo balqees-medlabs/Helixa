@@ -5,12 +5,15 @@ import { useParams } from "next/navigation";
 
 import { AdvanceAction } from "@/components/AdvanceAction";
 import { ConsentChecklist } from "@/components/ConsentChecklist";
+import { CoveragePanel, coverageGateReason } from "@/components/CoveragePanel";
 import { EmptyState } from "@/components/EmptyState";
 import { GateError } from "@/components/GateError";
+import { PipelineTimeline } from "@/components/PipelineTimeline";
 import { StageBadge } from "@/components/StageBadge";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useSample, useSampleEvents } from "@/lib/features/samples/queries";
+import { useSampleCoverage, useSamplePipelineResults } from "@/lib/features/pipeline/queries";
 import { formatDateTime, formatDurationHours } from "@/lib/format";
 import { sentenceCase } from "@/lib/i18n/dir";
 
@@ -23,6 +26,11 @@ export default function SampleDetailPage() {
   const eventsQuery = useSampleEvents(sampleId);
 
   const sample = sampleQuery.data;
+  const coverageQuery = useSampleCoverage(sample?.id ?? "");
+  const resultsQuery = useSamplePipelineResults(sample?.id ?? "");
+
+  const results = resultsQuery.data ?? [];
+  const hasConversion = results.some((result) => result.kind === "conversion" && result.status === "ok");
 
   if (sampleQuery.isLoading) {
     return (
@@ -154,14 +162,25 @@ export default function SampleDetailPage() {
             <h2 id="advance-heading" className="text-lg font-semibold tracking-tight">
               Advance
             </h2>
-            <AdvanceAction
-              sampleId={sample.id}
-              fromStage={sample.current_stage.position}
-              status={sample.status}
-            />
-          </section>
+          <AdvanceAction
+            sampleId={sample.id}
+            fromStage={sample.current_stage.position}
+            status={sample.status}
+          />
+        </section>
 
-          <ConsentChecklist sampleId={sample.id} canEdit={can("genomics")} />
+        <CoveragePanel
+          latest={coverageQuery.data?.[0] ?? null}
+          history={coverageQuery.data ?? []}
+          gateReason={coverageGateReason({
+            latest: coverageQuery.data?.[0] ?? null,
+            hasConversion,
+          })}
+        />
+
+        <PipelineTimeline results={results} />
+
+        <ConsentChecklist sampleId={sample.id} canEdit={can("genomics")} />
         </div>
       </div>
     </section>

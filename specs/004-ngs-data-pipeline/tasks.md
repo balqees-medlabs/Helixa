@@ -85,14 +85,14 @@ Web monorepo: `backend/` (FastAPI + Alembic), `frontend/` (Next.js). Migration u
 
 **Independent test**: ingest at Stage 3 advances to Stage 4 (held otherwise); conversion + coverage ≥ target advances to Stage 7; coverage < target → BELOW, blocked; duplicate report → no double-advance.
 
-- [ ] T024 [US2] Implement result recording + stage driving in `backend/app/services/pipeline_service.py`: record `ingest`/`conversion` results with idempotency key; drive Stage 4 (ingest) and Stage 7 (conversion **and** coverage pass) via the existing optimistic-concurrency advance; hold out-of-order as a no-op (see [contracts/stage-driving.md](./contracts/stage-driving.md))
-- [ ] T025 [US2] Add coverage recording to `pipeline_service` (derive `verdict` = `pass` iff `depth_x >= target_x`; append-only; latest governs the gate)
-- [ ] T026 [US2] Implement pipeline API (`POST /samples/{id}/pipeline-results`, `POST /samples/{id}/coverage`) in `backend/app/api/pipeline.py` authenticated as `pipeline-reporter`; wire router
-- [ ] T027 [P] [US2] API test: in-order/hold, Stage 7 needs both signals, BELOW blocks, idempotent no-double-advance in `backend/tests/api/test_stage_driving.py`
-- [ ] T028 [US2] Regenerate OpenAPI + frontend `check:contract`
-- [ ] T029 [P] [US2] Typed hooks in `frontend/lib/features/pipeline/queries.ts`
-- [ ] T030 [US2] Coverage panel + pipeline timeline in `frontend/components/CoveragePanel.tsx`, `frontend/components/PipelineTimeline.tsx`, wired into `frontend/app/(app)/samples/[id]/page.tsx`
-- [ ] T031 [P] [US2] Frontend test (MSW): coverage/timeline render, BELOW flag, gate reason in `frontend/tests/pipeline.test.tsx`
+- [X] T024 [US2] Implement result recording + stage driving in `backend/app/services/pipeline_service.py`: record `ingest`/`conversion` results with idempotency key; drive Stage 4 (ingest) and Stage 7 (conversion **and** coverage pass) via the existing optimistic-concurrency advance; hold out-of-order as a no-op (see [contracts/stage-driving.md](./contracts/stage-driving.md))
+- [X] T025 [US2] Add coverage recording to `pipeline_service` (derive `verdict` = `pass` iff `depth_x >= target_x`; append-only; latest governs the gate)
+- [X] T026 [US2] Implement pipeline API (`POST /samples/{id}/pipeline-results`, `POST /samples/{id}/coverage`) in `backend/app/api/pipeline.py` authenticated as `pipeline-reporter`; wire router
+- [X] T027 [P] [US2] API test: in-order/hold, Stage 7 needs both signals, BELOW blocks, idempotent no-double-advance in `backend/tests/api/test_stage_driving.py`
+- [X] T028 [US2] Regenerate OpenAPI + frontend `check:contract`
+- [X] T029 [P] [US2] Typed hooks in `frontend/lib/features/pipeline/queries.ts`
+- [X] T030 [US2] Coverage panel + pipeline timeline in `frontend/components/CoveragePanel.tsx`, `frontend/components/PipelineTimeline.tsx`, wired into `frontend/app/(app)/samples/[id]/page.tsx`
+- [X] T031 [P] [US2] Frontend test (MSW): coverage/timeline render, BELOW flag, gate reason in `frontend/tests/pipeline.test.tsx`
 
 **Checkpoint**: sequencing outcomes drive the workflow automatically.
 

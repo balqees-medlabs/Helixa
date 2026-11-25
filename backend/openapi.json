@@ -413,6 +413,105 @@
         "title": "ConsentRequest",
         "type": "object"
       },
+      "CoverageCreate": {
+        "properties": {
+          "depth_x": {
+            "title": "Depth X",
+            "type": "number"
+          },
+          "idempotency_key": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "read_pairs": {
+            "minimum": 0.0,
+            "title": "Read Pairs",
+            "type": "integer"
+          },
+          "target_x": {
+            "minimum": 1.0,
+            "title": "Target X",
+            "type": "integer"
+          },
+          "yield_gb": {
+            "title": "Yield Gb",
+            "type": "number"
+          }
+        },
+        "required": [
+          "read_pairs",
+          "yield_gb",
+          "depth_x",
+          "target_x",
+          "idempotency_key"
+        ],
+        "title": "CoverageCreate",
+        "type": "object"
+      },
+      "CoverageOut": {
+        "properties": {
+          "depth_x": {
+            "title": "Depth X",
+            "type": "number"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "pipeline_sample_id": {
+            "format": "uuid",
+            "title": "Pipeline Sample Id",
+            "type": "string"
+          },
+          "read_pairs": {
+            "title": "Read Pairs",
+            "type": "integer"
+          },
+          "reported_at": {
+            "format": "date-time",
+            "title": "Reported At",
+            "type": "string"
+          },
+          "reported_by": {
+            "format": "uuid",
+            "title": "Reported By",
+            "type": "string"
+          },
+          "target_x": {
+            "title": "Target X",
+            "type": "integer"
+          },
+          "verdict": {
+            "title": "Verdict",
+            "type": "string"
+          },
+          "yield_gb": {
+            "title": "Yield Gb",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "pipeline_sample_id",
+          "read_pairs",
+          "yield_gb",
+          "depth_x",
+          "target_x",
+          "verdict",
+          "reported_by",
+          "reported_at",
+          "idempotency_key"
+        ],
+        "title": "CoverageOut",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -568,6 +667,247 @@
           "total"
         ],
         "title": "Page[UserOut]",
+        "type": "object"
+      },
+      "PipelineResultCreate": {
+        "properties": {
+          "detail": {
+            "additionalProperties": true,
+            "title": "Detail",
+            "type": "object"
+          },
+          "idempotency_key": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "integrity_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Integrity Ok"
+          },
+          "kind": {
+            "enum": [
+              "ingest",
+              "conversion",
+              "augmentation"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "plan_match": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Match"
+          },
+          "q30": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q30"
+          },
+          "read_length": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read Length"
+          },
+          "reads_assigned_pct": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reads Assigned Pct"
+          },
+          "source_run_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Run Ids"
+          },
+          "status": {
+            "default": "ok",
+            "enum": [
+              "ok",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "idempotency_key"
+        ],
+        "title": "PipelineResultCreate",
+        "type": "object"
+      },
+      "PipelineResultOut": {
+        "properties": {
+          "detail": {
+            "additionalProperties": true,
+            "title": "Detail",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "integrity_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Integrity Ok"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "pipeline_sample_id": {
+            "format": "uuid",
+            "title": "Pipeline Sample Id",
+            "type": "string"
+          },
+          "plan_match": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Match"
+          },
+          "q30": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q30"
+          },
+          "read_length": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read Length"
+          },
+          "reads_assigned_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reads Assigned Pct"
+          },
+          "reported_at": {
+            "format": "date-time",
+            "title": "Reported At",
+            "type": "string"
+          },
+          "reported_by": {
+            "format": "uuid",
+            "title": "Reported By",
+            "type": "string"
+          },
+          "source_run_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Run Ids"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "pipeline_sample_id",
+          "kind",
+          "status",
+          "read_length",
+          "q30",
+          "reads_assigned_pct",
+          "source_run_ids",
+          "integrity_ok",
+          "plan_match",
+          "detail",
+          "reported_by",
+          "reported_at",
+          "idempotency_key"
+        ],
+        "title": "PipelineResultOut",
         "type": "object"
       },
       "PipelineSampleCreate": {
@@ -3195,6 +3535,104 @@
         ]
       }
     },
+    "/samples/{sample_id}/coverage": {
+      "get": {
+        "operationId": "list_coverage_samples__sample_id__coverage_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sample_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sample Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CoverageOut"
+                  },
+                  "title": "Response List Coverage Samples  Sample Id  Coverage Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Coverage",
+        "tags": [
+          "pipeline"
+        ]
+      },
+      "post": {
+        "operationId": "post_coverage_samples__sample_id__coverage_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sample_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sample Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoverageCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoverageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Coverage",
+        "tags": [
+          "pipeline"
+        ]
+      }
+    },
     "/samples/{sample_id}/events": {
       "get": {
         "operationId": "list_events_samples__sample_id__events_get",
@@ -3239,6 +3677,104 @@
         "summary": "List Events",
         "tags": [
           "samples"
+        ]
+      }
+    },
+    "/samples/{sample_id}/pipeline-results": {
+      "get": {
+        "operationId": "list_pipeline_results_samples__sample_id__pipeline_results_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sample_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sample Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PipelineResultOut"
+                  },
+                  "title": "Response List Pipeline Results Samples  Sample Id  Pipeline Results Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Pipeline Results",
+        "tags": [
+          "pipeline"
+        ]
+      },
+      "post": {
+        "operationId": "post_pipeline_result_samples__sample_id__pipeline_results_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sample_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sample Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineResultCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Pipeline Result",
+        "tags": [
+          "pipeline"
         ]
       }
     },
