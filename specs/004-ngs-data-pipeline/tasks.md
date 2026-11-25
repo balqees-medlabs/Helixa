@@ -25,8 +25,8 @@ Web monorepo: `backend/` (FastAPI + Alembic), `frontend/` (Next.js). Migration u
 
 ## Phase 1: Setup
 
-- [ ] T001 Create Alembic revision `backend/alembic/versions/0003_ngs_pipeline.py` with `down_revision = "0002_backend_auth_workflow"` and empty `upgrade()`/`downgrade()` scaffolds
-- [ ] T002 [P] Add a "Spec 4 — NGS pipeline" section header and model-class stubs block to `backend/app/db/models.py` (names only, filled in T009)
+- [X] T001 Create Alembic revision `backend/alembic/versions/0003_ngs_pipeline.py` with `down_revision = "0002"` (the revision id of `0002_backend_auth_workflow.py`) and empty `upgrade()`/`downgrade()` scaffolds
+- [X] T002 [P] Add a "Spec 4 — NGS pipeline" section header and model-class stubs block to `backend/app/db/models.py` (names only, filled in T009)
 
 ---
 

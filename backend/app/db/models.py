@@ -379,3 +379,34 @@ class PortalPush(Base):
         ),
         Index("ix_portal_pushes_queue", "status", "next_attempt_at"),
     )
+
+
+# --- Spec 4 (0003): NGS pipeline tables — stubs, columns filled in T009 -------
+
+
+class SequencingRun:
+    __tablename__ = "sequencing_runs"
+
+
+class PipelineSample:
+    __tablename__ = "pipeline_samples"
+
+
+class MergePlanRun:
+    __tablename__ = "merge_plan_runs"
+
+
+class PipelineResult:
+    __tablename__ = "pipeline_results"
+
+
+class CoverageResult:
+    __tablename__ = "coverage_results"
+
+
+class VendorDelivery:
+    __tablename__ = "vendor_deliveries"
+
+
+class ApiToken:
+    __tablename__ = "api_tokens"
