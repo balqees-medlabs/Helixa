@@ -7,8 +7,10 @@ logic lives here.
 
 import uuid
 from datetime import date, datetime
+from decimal import Decimal
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
     Date,
@@ -21,6 +23,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    Uuid,
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, CITEXT, JSONB
@@ -146,9 +149,22 @@ class Vendor(Base):
     tat_anchor: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
 
+    # Spec 4 (0003): non-secret delivery profile (T004) — nullable to preserve
+    # existing rows; credentials are never part of the profile.
+    delivery_kind: Mapped[str | None] = mapped_column(String, nullable=True)
+    endpoint_ref: Mapped[dict | None] = mapped_column(JSONB)
+    naming_pattern: Mapped[str | None] = mapped_column(Text)
+    md5_required: Mapped[bool | None] = mapped_column(Boolean)
+    verification_method: Mapped[str | None] = mapped_column(String)
+
     __table_args__ = (
         CheckConstraint("tat_days >= 0", name="ck_vendors_tat_days"),
         CheckConstraint("tat_anchor IN ('receipt', 'sequencing')", name="ck_vendors_tat_anchor"),
+        CheckConstraint("delivery_kind IN ('s3', 'sftp')", name="ck_vendors_delivery_kind"),
+        CheckConstraint(
+            "verification_method IN ('readback', 'receipt', 'checksum_marker')",
+            name="ck_vendors_verification_method",
+        ),
     )
 
 
@@ -224,7 +240,8 @@ class Role(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "slug IN ('admin', 'genomics', 'trf', 'molecular', 'bioinformatics')",
+            "slug IN ('admin', 'genomics', 'trf', 'molecular', 'bioinformatics', "
+            "'pipeline-reporter')",
             name="ck_roles_slug",
         ),
     )
@@ -381,32 +398,194 @@ class PortalPush(Base):
     )
 
 
-# --- Spec 4 (0003): NGS pipeline tables — stubs, columns filled in T009 -------
+# --- Spec 4 (0003): NGS pipeline tables (stubs added in T002, filled in T009) ---
 
 
-class SequencingRun:
+class SequencingRun(Base):
     __tablename__ = "sequencing_runs"
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    run_folder: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    instrument: Mapped[str] = mapped_column(Text, nullable=False)
+    project: Mapped[str | None] = mapped_column(Text)
+    run_side: Mapped[str | None] = mapped_column(String)
+    run_date: Mapped[date | None] = mapped_column(Date)
+    storage_location: Mapped[str | None] = mapped_column(Text)
+    readiness: Mapped[str] = mapped_column(
+        String, nullable=False, server_default=text("'received'")
+    )
+    cycle_r1: Mapped[int | None] = mapped_column(Integer)
+    cycle_r2: Mapped[int | None] = mapped_column(Integer)
+    cycle_i1: Mapped[int | None] = mapped_column(Integer)
+    cycle_i2: Mapped[int | None] = mapped_column(Integer)
+    created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
 
-class PipelineSample:
+    __table_args__ = (
+        CheckConstraint(
+            "readiness IN ('received', 'ready', 'incomplete')", name="ck_sequencing_runs_readiness"
+        ),
+    )
+
+
+class PipelineSample(Base):
     __tablename__ = "pipeline_samples"
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    sample_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("samples.id"), nullable=False, unique=True
+    )
+    ngs_sample_id: Mapped[str] = mapped_column(Text, nullable=False)
+    sample_type: Mapped[str] = mapped_column(String, nullable=False)
+    coverage_target_x: Mapped[int] = mapped_column(Integer, nullable=False)
+    vendor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("vendors.id"))
+    pipeline_state: Mapped[str] = mapped_column(
+        String, nullable=False, server_default=text("'intake'")
+    )
+    created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
 
-class MergePlanRun:
+    __table_args__ = (
+        CheckConstraint("sample_type IN ('G', 'R')", name="ck_pipeline_samples_sample_type"),
+        CheckConstraint(
+            "pipeline_state IN ('intake', 'ingested', 'converted', 'augmented', "
+            "'qc_pass', 'qc_below', 'delivered')",
+            name="ck_pipeline_samples_state",
+        ),
+    )
+
+
+class MergePlanRun(Base):
     __tablename__ = "merge_plan_runs"
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    pipeline_sample_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("pipeline_samples.id"), nullable=False
+    )
+    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sequencing_runs.id"), nullable=False)
+    created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
 
-class PipelineResult:
+    __table_args__ = (
+        UniqueConstraint("pipeline_sample_id", "run_id", name="uq_merge_plan_runs_sample_run"),
+    )
+
+
+class PipelineResult(Base):
     __tablename__ = "pipeline_results"
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    pipeline_sample_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("pipeline_samples.id"), nullable=False
+    )
+    kind: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str] = mapped_column(String, nullable=False)
+    read_length: Mapped[int | None] = mapped_column(Integer)
+    q30: Mapped[Decimal | None] = mapped_column(Numeric)
+    reads_assigned_pct: Mapped[Decimal | None] = mapped_column(Numeric)
+    source_run_ids: Mapped[list[uuid.UUID] | None] = mapped_column(ARRAY(Uuid))
+    integrity_ok: Mapped[bool | None] = mapped_column(Boolean)
+    plan_match: Mapped[bool | None] = mapped_column(Boolean)
+    detail: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default=text("'{}'"))
+    reported_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    reported_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    idempotency_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
 
-class CoverageResult:
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('ingest', 'conversion', 'augmentation')", name="ck_pipeline_results_kind"
+        ),
+        CheckConstraint("status IN ('ok', 'failed')", name="ck_pipeline_results_status"),
+    )
+
+
+class CoverageResult(Base):
     __tablename__ = "coverage_results"
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    pipeline_sample_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("pipeline_samples.id"), nullable=False
+    )
+    read_pairs: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    yield_gb: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
+    depth_x: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
+    target_x: Mapped[int] = mapped_column(Integer, nullable=False)
+    verdict: Mapped[str] = mapped_column(String, nullable=False)
+    reported_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    reported_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    idempotency_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
 
-class VendorDelivery:
+    __table_args__ = (
+        CheckConstraint("verdict IN ('pass', 'below')", name="ck_coverage_results_verdict"),
+    )
+
+
+class VendorDelivery(Base):
     __tablename__ = "vendor_deliveries"
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    pipeline_sample_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("pipeline_samples.id"), nullable=False
+    )
+    vendor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("vendors.id"), nullable=False)
+    destination_kind: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String, nullable=False, server_default=text("'pending'"))
+    verification_state: Mapped[str] = mapped_column(
+        String, nullable=False, server_default=text("'unverified'")
+    )
+    completion_marker: Mapped[str | None] = mapped_column(Text)
+    evidence: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default=text("'{}'"))
+    reported_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    reported_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
 
-class ApiToken:
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'uploading', 'delivered', 'failed')",
+            name="ck_vendor_deliveries_status",
+        ),
+        CheckConstraint(
+            "verification_state IN ('unverified', 'readback_ok', 'receipt_confirmed', "
+            "'checksum_marker_ok')",
+            name="ck_vendor_deliveries_verification_state",
+        ),
+    )
+
+
+class ApiToken(Base):
     __tablename__ = "api_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    token_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    created_by: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

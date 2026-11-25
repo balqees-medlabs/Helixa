@@ -39,6 +39,7 @@ os.environ.setdefault("APP_DB_PASSWORD", TEST_APP_PASSWORD)
 from tests.db.conftest import admin_engine as _db_admin_engine  # noqa: E402,F401
 from tests.db.conftest import admin_url as _db_admin_url  # noqa: E402,F401
 from tests.db.conftest import database_url as _db_database_url  # noqa: E402,F401
+from tests.db.conftest import helixa_engine as _db_helixa_engine  # noqa: E402,F401
 
 ROLE_SLUGS = ("admin", "genomics", "trf", "molecular", "bioinformatics")
 
@@ -56,6 +57,11 @@ def database_url(_db_database_url: str) -> Iterator[str]:  # noqa: F811
 @pytest.fixture(scope="session")
 def admin_engine(_db_admin_engine: Engine) -> Iterator[Engine]:  # noqa: F811
     yield _db_admin_engine
+
+
+@pytest.fixture(scope="session")
+def helixa_engine(_db_helixa_engine: Engine) -> Iterator[Engine]:  # noqa: F811
+    yield _db_helixa_engine
 
 
 @pytest.fixture(scope="session")

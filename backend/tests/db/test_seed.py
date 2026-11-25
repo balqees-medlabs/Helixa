@@ -19,13 +19,16 @@ EXPECTED_VENDORS = {
 }
 
 
-def test_exactly_five_roles_seeded(admin_conn) -> None:
+def test_role_slugs_seeded(admin_conn) -> None:
+    # Five human access roles (Article III.2) plus the non-human
+    # pipeline-reporter machine role added in 0003 (Article II.4 / D-01).
     rows = admin_conn.execute(text("SELECT slug FROM roles ORDER BY slug")).fetchall()
     assert [row.slug for row in rows] == [
         "admin",
         "bioinformatics",
         "genomics",
         "molecular",
+        "pipeline-reporter",
         "trf",
     ]
 
@@ -46,15 +49,31 @@ def test_four_named_vendors_with_tat_anchors_seeded(admin_conn) -> None:
     assert {row.name: (row.tat_days, row.tat_anchor) for row in rows} == EXPECTED_VENDORS
 
 
-def test_exactly_one_system_actor_and_zero_human_users(admin_conn) -> None:
-    users = admin_conn.execute(text("SELECT is_system, email, is_active FROM users")).fetchall()
-    assert len(users) == 1
-    assert users[0].is_system is True
-    assert users[0].email is None  # no credentials; auth arrives in M2
-    assert users[0].is_active is True
+def test_exactly_one_system_actor_and_only_the_machine_identity(admin_conn) -> None:
+    system = admin_conn.execute(
+        text("SELECT is_system, email, is_active FROM users WHERE is_system")
+    ).fetchall()
+    assert len(system) == 1
+    assert system[0].is_system is True
+    assert system[0].email is None  # no credentials
+    assert system[0].is_active is True
 
-    humans = admin_conn.execute(text("SELECT count(*) FROM users WHERE NOT is_system")).scalar_one()
-    assert humans == 0  # FR-012: no human admin is seeded here
+    # The only non-system user seeded is the non-human pipeline-reporter machine
+    # identity (0003, D-01): no email/credentials, holds only that role. Still no
+    # human admin is seeded here (FR-012).
+    non_system = admin_conn.execute(
+        text(
+            "SELECT u.email, array_agg(r.slug ORDER BY r.slug) AS roles "
+            "FROM users u "
+            "LEFT JOIN user_roles ur ON ur.user_id = u.id "
+            "LEFT JOIN roles r ON r.id = ur.role_id "
+            "WHERE NOT u.is_system "
+            "GROUP BY u.id, u.email"
+        )
+    ).fetchall()
+    assert len(non_system) == 1
+    assert non_system[0].email is None
+    assert non_system[0].roles == ["pipeline-reporter"]
 
 
 def test_one_default_calendar_seeded_empty_of_holidays(admin_conn) -> None:

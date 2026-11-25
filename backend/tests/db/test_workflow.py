@@ -185,6 +185,10 @@ def test_editing_sla_leaves_past_durations_unchanged(
     )
 
     # An administrator shortens/extends the SLA after samples have progressed.
+    original_sla = admin_conn.execute(
+        text("SELECT sla_days FROM stage_sla WHERE stage_id = :stage_id"),
+        {"stage_id": str(stage_ids[1])},
+    ).scalar_one()
     admin_conn.execute(
         text("UPDATE stage_sla SET sla_days = :days WHERE stage_id = :stage_id"),
         {"days": 9, "stage_id": str(stage_ids[1])},
@@ -195,6 +199,14 @@ def test_editing_sla_leaves_past_durations_unchanged(
         {"sample_id": str(sample_id)},
     ).scalar_one()
     assert duration == 12.5  # FR-006: past durations never change
+
+    # Restore the SLA: admin_conn commits at teardown, so without this the
+    # edited stage-1 SLA would leak into the shared session DB and flip the
+    # current-SLA breach in the TAT metrics test (cross-test isolation).
+    admin_conn.execute(
+        text("UPDATE stage_sla SET sla_days = :days WHERE stage_id = :stage_id"),
+        {"days": original_sla, "stage_id": str(stage_ids[1])},
+    )
 
 
 def test_duplicate_case_id_is_rejected(

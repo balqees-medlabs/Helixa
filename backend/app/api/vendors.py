@@ -47,6 +47,11 @@ def update_vendor(vendor_id: uuid.UUID, body: VendorUpdate, _user: Admin, conn: 
             tat_days=body.tat_days,
             tat_anchor=body.tat_anchor,
             is_active=body.is_active,
+            delivery_kind=body.delivery_kind,
+            endpoint_ref=body.endpoint_ref,
+            naming_pattern=body.naming_pattern,
+            md5_required=body.md5_required,
+            verification_method=body.verification_method,
         )
     except vendor_service.VendorNotFound as exc:
         raise HTTPException(status_code=404, detail="Vendor not found") from exc

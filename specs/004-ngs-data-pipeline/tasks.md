@@ -36,25 +36,25 @@ Web monorepo: `backend/` (FastAPI + Alembic), `frontend/` (Next.js). Migration u
 
 ### Database — migration `0003` (all in `backend/alembic/versions/0003_ngs_pipeline.py`)
 
-- [ ] T003 Create tables `sequencing_runs`, `pipeline_samples`, `merge_plan_runs`, `pipeline_results`, `coverage_results`, `vendor_deliveries`, `api_tokens` with columns, PKs, FKs and uniqueness per [data-model.md](./data-model.md) — including: `sequencing_runs.run_folder` unique not-null; `sequencing_runs.readiness` check `in ('received','ready','incomplete')`; `pipeline_samples.sample_id` **unique** FK→`samples`; `pipeline_samples.sample_type` check `in ('G','R')`; `pipeline_samples.coverage_target_x` not-null; `pipeline_results.kind` check `in ('ingest','conversion','augmentation')` and `idempotency_key` unique not-null; `coverage_results.verdict` check `in ('pass','below')` and `idempotency_key` unique not-null; `vendor_deliveries.status` check `in ('pending','uploading','delivered','failed')` and `verification_state` check `in ('unverified','readback_ok','receipt_confirmed','checksum_marker_ok')`; `merge_plan_runs` unique `(pipeline_sample_id, run_id)`
-- [ ] T004 Extend `vendors` with `delivery_kind` (check `in ('s3','sftp')`), `endpoint_ref` jsonb, `naming_pattern` text, `md5_required` boolean, `verification_method` (check `in ('readback','receipt','checksum_marker')`) — all nullable to preserve existing rows
-- [ ] T005 Add `audit_log` triggers (reusing `fn_audit()`) on all seven new tables so every change is logged in-transaction (Article IV.1)
-- [ ] T006 Add append-only triggers rejecting UPDATE and DELETE for every role on `pipeline_results` and `coverage_results` (Article IV.3)
-- [ ] T007 Enable RLS and add two-tier policies on the new tables: read for `molecular`/`bioinformatics`/`admin` per existing visibility rules; for the `pipeline-reporter` role — scoped **INSERT** on `pipeline_results`/`coverage_results`/`vendor_deliveries`, **UPDATE** on `vendor_deliveries` (delivery status transitions; it is mutable/audited, not append-only), and scoped **SELECT** on the runs/samples/results it reports on (so it can read a sample's coverage clearance before opening a delivery — FR-022); deny-by-default otherwise (Article III.3)
-- [ ] T008 Seed the `pipeline-reporter` role, a non-human service user holding only that role, and backfill the three vendor delivery profiles (Arcensus `s3`/`readback`, SelfDecode `s3`/`receipt`, Revvity `sftp`/`checksum_marker` + `md5_required=true`); write matching `downgrade()`
+- [X] T003 Create tables `sequencing_runs`, `pipeline_samples`, `merge_plan_runs`, `pipeline_results`, `coverage_results`, `vendor_deliveries`, `api_tokens` with columns, PKs, FKs and uniqueness per [data-model.md](./data-model.md) — including: `sequencing_runs.run_folder` unique not-null; `sequencing_runs.readiness` check `in ('received','ready','incomplete')`; `pipeline_samples.sample_id` **unique** FK→`samples`; `pipeline_samples.sample_type` check `in ('G','R')`; `pipeline_samples.coverage_target_x` not-null; `pipeline_results.kind` check `in ('ingest','conversion','augmentation')` and `idempotency_key` unique not-null; `coverage_results.verdict` check `in ('pass','below')` and `idempotency_key` unique not-null; `vendor_deliveries.status` check `in ('pending','uploading','delivered','failed')` and `verification_state` check `in ('unverified','readback_ok','receipt_confirmed','checksum_marker_ok')`; `merge_plan_runs` unique `(pipeline_sample_id, run_id)`
+- [X] T004 Extend `vendors` with `delivery_kind` (check `in ('s3','sftp')`), `endpoint_ref` jsonb, `naming_pattern` text, `md5_required` boolean, `verification_method` (check `in ('readback','receipt','checksum_marker')`) — all nullable to preserve existing rows
+- [X] T005 Add `audit_log` triggers (reusing `fn_audit()`) on all seven new tables so every change is logged in-transaction (Article IV.1)
+- [X] T006 Add append-only triggers rejecting UPDATE and DELETE for every role on `pipeline_results` and `coverage_results` (Article IV.3)
+- [X] T007 Enable RLS and add two-tier policies on the new tables: read for `molecular`/`bioinformatics`/`admin` per existing visibility rules; for the `pipeline-reporter` role — scoped **INSERT** on `pipeline_results`/`coverage_results`/`vendor_deliveries`, **UPDATE** on `vendor_deliveries` (delivery status transitions; it is mutable/audited, not append-only), and scoped **SELECT** on the runs/samples/results it reports on (so it can read a sample's coverage clearance before opening a delivery — FR-022); deny-by-default otherwise (Article III.3)
+- [X] T008 Seed the `pipeline-reporter` role, a non-human service user holding only that role, and backfill the three vendor delivery profiles (Arcensus `s3`/`readback`, SelfDecode `s3`/`receipt`, Revvity `sftp`/`checksum_marker` + `md5_required=true`); write matching `downgrade()`
 
 ### Backend — shared models, schemas, machine auth
 
-- [ ] T009 [P] Add SQLAlchemy models for the seven new tables and the new `vendors` columns in `backend/app/db/models.py` (no business logic — mirrors only)
-- [ ] T010 [P] Add Pydantic v2 request/response schemas (runs, pipeline samples, merge plan, pipeline results, coverage, deliveries, vendor profile, api-tokens) under `backend/app/schemas/`
-- [ ] T011 Implement `pipeline-reporter` bearer-token auth in `backend/app/core/service_auth.py`: hash-compare against non-revoked `api_tokens`, resolve the service user + scoped role, set `app.user_id`/`app.role_names` on the transaction; reject missing/invalid/revoked with 401 and out-of-scope routes with 403 (see [contracts/reporter-auth.md](./contracts/reporter-auth.md))
-- [ ] T012 Implement api-token admin endpoints in `backend/app/api/api_tokens.py` (`POST` mints + returns token once, `GET` metadata only, `DELETE` revokes) guarded to `admin`; wire the router into `backend/app/main.py`
+- [X] T009 [P] Add SQLAlchemy models for the seven new tables and the new `vendors` columns in `backend/app/db/models.py` (no business logic — mirrors only)
+- [X] T010 [P] Add Pydantic v2 request/response schemas (runs, pipeline samples, merge plan, pipeline results, coverage, deliveries, vendor profile, api-tokens) under `backend/app/schemas/`
+- [X] T011 Implement `pipeline-reporter` bearer-token auth in `backend/app/core/service_auth.py`: hash-compare against non-revoked `api_tokens`, resolve the service user + scoped role, set `app.user_id`/`app.role_names` on the transaction; reject missing/invalid/revoked with 401 and out-of-scope routes with 403 (see [contracts/reporter-auth.md](./contracts/reporter-auth.md))
+- [X] T012 Implement api-token admin endpoints in `backend/app/api/api_tokens.py` (`POST` mints + returns token once, `GET` metadata only, `DELETE` revokes) guarded to `admin`; wire the router into `backend/app/main.py`
 
 ### Foundational tests
 
-- [ ] T013 [P] DB test: RLS visibility + deny-by-default on the new tables in `backend/tests/db/test_pipeline_rls.py`
-- [ ] T014 [P] DB test: append-only UPDATE/DELETE rejection on `pipeline_results` and `coverage_results` in `backend/tests/db/test_pipeline_append_only.py`
-- [ ] T015 [P] API test: token auth valid / invalid / revoked / out-of-scope-403 in `backend/tests/api/test_service_auth.py`
+- [X] T013 [P] DB test: RLS visibility + deny-by-default on the new tables in `backend/tests/db/test_pipeline_rls.py`
+- [X] T014 [P] DB test: append-only UPDATE/DELETE rejection on `pipeline_results` and `coverage_results` in `backend/tests/db/test_pipeline_append_only.py`
+- [X] T015 [P] API test: token auth valid / invalid / revoked / out-of-scope-403 in `backend/tests/api/test_service_auth.py`
 
 **Checkpoint**: schema live, machine-auth usable, shared models/schemas ready.
 

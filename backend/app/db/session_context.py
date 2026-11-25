@@ -16,7 +16,9 @@ from collections.abc import Iterable, Sequence
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
-ROLE_SLUGS = frozenset({"admin", "genomics", "trf", "molecular", "bioinformatics"})
+ROLE_SLUGS = frozenset(
+    {"admin", "genomics", "trf", "molecular", "bioinformatics", "pipeline-reporter"}
+)
 
 _SET = text("SELECT set_config(:key, :value, true)")
 

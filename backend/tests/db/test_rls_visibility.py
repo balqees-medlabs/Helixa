@@ -64,7 +64,7 @@ def test_admin_reads_all(helixa_engine: Engine, set_context, system_user_id: uui
     with helixa_engine.connect() as conn, conn.begin():
         set_context(conn, system_user_id, ["admin"])
         assert conn.execute(text("SELECT count(*) FROM users")).scalar_one() >= 1
-        assert conn.execute(text("SELECT count(*) FROM roles")).scalar_one() == 5
+        assert conn.execute(text("SELECT count(*) FROM roles")).scalar_one() == 6
         assert conn.execute(text("SELECT count(*) FROM audit_log")).scalar_one() >= 1
         assert conn.execute(text("SELECT count(*) FROM samples")).scalar_one() >= 0
         assert conn.execute(text("SELECT count(*) FROM stages")).scalar_one() == 8

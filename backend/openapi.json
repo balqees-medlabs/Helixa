@@ -43,6 +43,132 @@
         "title": "AdvanceRequest",
         "type": "object"
       },
+      "ApiTokenCreate": {
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "const": "pipeline-reporter",
+            "default": "pipeline-reporter",
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ApiTokenCreate",
+        "type": "object"
+      },
+      "ApiTokenMintedOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "user_id",
+          "created_by",
+          "created_at",
+          "revoked_at",
+          "token"
+        ],
+        "title": "ApiTokenMintedOut",
+        "type": "object"
+      },
+      "ApiTokenOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "user_id",
+          "created_by",
+          "created_at",
+          "revoked_at"
+        ],
+        "title": "ApiTokenOut",
+        "type": "object"
+      },
       "BatchAdvanceRequest": {
         "properties": {
           "from_stage": {
@@ -1302,6 +1428,29 @@
       },
       "VendorOut": {
         "properties": {
+          "delivery_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Kind"
+          },
+          "endpoint_ref": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endpoint Ref"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -1311,9 +1460,31 @@
             "title": "Is Active",
             "type": "boolean"
           },
+          "md5_required": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Md5 Required"
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "naming_pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Naming Pattern"
           },
           "tat_anchor": {
             "title": "Tat Anchor",
@@ -1322,6 +1493,17 @@
           "tat_days": {
             "title": "Tat Days",
             "type": "integer"
+          },
+          "verification_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Method"
           }
         },
         "required": [
@@ -1329,7 +1511,12 @@
           "name",
           "tat_days",
           "tat_anchor",
-          "is_active"
+          "is_active",
+          "delivery_kind",
+          "endpoint_ref",
+          "naming_pattern",
+          "md5_required",
+          "verification_method"
         ],
         "title": "VendorOut",
         "type": "object"
@@ -1440,7 +1627,35 @@
         "type": "object"
       },
       "VendorUpdate": {
+        "description": "Flat delivery-profile fields (T004, contracts/endpoints.md): no\ncredentials are accepted or stored (FR-021).",
         "properties": {
+          "delivery_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "s3",
+                  "sftp"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Kind"
+          },
+          "endpoint_ref": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endpoint Ref"
+          },
           "is_active": {
             "anyOf": [
               {
@@ -1451,6 +1666,17 @@
               }
             ],
             "title": "Is Active"
+          },
+          "md5_required": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Md5 Required"
           },
           "name": {
             "anyOf": [
@@ -1464,6 +1690,18 @@
               }
             ],
             "title": "Name"
+          },
+          "naming_pattern": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Naming Pattern"
           },
           "tat_anchor": {
             "anyOf": [
@@ -1491,6 +1729,22 @@
               }
             ],
             "title": "Tat Days"
+          },
+          "verification_method": {
+            "anyOf": [
+              {
+                "enum": [
+                  "readback",
+                  "receipt",
+                  "checksum_marker"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Method"
           }
         },
         "title": "VendorUpdate",
@@ -1505,6 +1759,113 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api-tokens": {
+      "get": {
+        "operationId": "list_api_tokens_api_tokens_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApiTokenOut"
+                  },
+                  "title": "Response List Api Tokens Api Tokens Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Api Tokens",
+        "tags": [
+          "api-tokens"
+        ]
+      },
+      "post": {
+        "operationId": "mint_api_token_api_tokens_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiTokenCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiTokenMintedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mint Api Token",
+        "tags": [
+          "api-tokens"
+        ]
+      }
+    },
+    "/api-tokens/{token_id}": {
+      "delete": {
+        "operationId": "revoke_api_token_api_tokens__token_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Token Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiTokenOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Api Token",
+        "tags": [
+          "api-tokens"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "operationId": "login_auth_login_post",

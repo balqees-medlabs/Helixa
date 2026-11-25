@@ -19,7 +19,10 @@ class VendorExists(Exception):
     """A vendor with that name already exists."""
 
 
-_VENDOR_SELECT = "SELECT id, name, tat_days, tat_anchor, is_active FROM vendors "
+_VENDOR_SELECT = (
+    "SELECT id, name, tat_days, tat_anchor, is_active, delivery_kind, endpoint_ref, "
+    "naming_pattern, md5_required, verification_method FROM vendors "
+)
 
 
 def list_vendors(conn: Connection) -> list[dict]:
@@ -74,6 +77,11 @@ def update_vendor(
     tat_days: int | None = None,
     tat_anchor: str | None = None,
     is_active: bool | None = None,
+    delivery_kind: str | None = None,
+    endpoint_ref: dict | None = None,
+    naming_pattern: str | None = None,
+    md5_required: bool | None = None,
+    verification_method: str | None = None,
 ) -> dict:
     get_vendor(conn, vendor_id)
 
@@ -91,6 +99,22 @@ def update_vendor(
     if is_active is not None:
         assignments.append("is_active = :is_active")
         params["is_active"] = is_active
+    # Non-secret delivery profile (T004): set via the flat PATCH fields.
+    if delivery_kind is not None:
+        assignments.append("delivery_kind = :delivery_kind")
+        params["delivery_kind"] = delivery_kind
+    if endpoint_ref is not None:
+        assignments.append("endpoint_ref = :endpoint_ref")
+        params["endpoint_ref"] = endpoint_ref
+    if naming_pattern is not None:
+        assignments.append("naming_pattern = :naming_pattern")
+        params["naming_pattern"] = naming_pattern
+    if md5_required is not None:
+        assignments.append("md5_required = :md5_required")
+        params["md5_required"] = md5_required
+    if verification_method is not None:
+        assignments.append("verification_method = :verification_method")
+        params["verification_method"] = verification_method
 
     if assignments:
         try:

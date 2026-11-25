@@ -8,7 +8,7 @@ proxies to localhost. Routers are registered in later phases.
 
 from fastapi import FastAPI
 
-from app.api import auth, batches, metrics, qc, reports, roles, samples, users, vendors
+from app.api import api_tokens, auth, batches, metrics, qc, reports, roles, samples, users, vendors
 
 app = FastAPI(
     title="Helixa Backend API",
@@ -33,6 +33,7 @@ def health() -> dict[str, str]:
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(roles.router)
+app.include_router(api_tokens.router)
 app.include_router(samples.router)
 app.include_router(qc.router)
 app.include_router(batches.router)

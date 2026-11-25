@@ -53,8 +53,9 @@ def test_downgrade_base_then_upgrade_head_reproduces_schema(
         assert before == after, "schema changed across a downgrade/upgrade cycle"
 
         # The seed is fully restored after the rebuild (FR-011).
-        assert conn.execute(text("SELECT count(*) FROM roles")).scalar_one() == 5
+        assert conn.execute(text("SELECT count(*) FROM roles")).scalar_one() == 6
         assert conn.execute(text("SELECT count(*) FROM stages")).scalar_one() == 8
         assert conn.execute(text("SELECT count(*) FROM vendors")).scalar_one() == 4
-        assert conn.execute(text("SELECT count(*) FROM users")).scalar_one() == 1
+        # System actor (0001) + the non-human pipeline-reporter machine identity (0003).
+        assert conn.execute(text("SELECT count(*) FROM users")).scalar_one() == 2
         assert conn.execute(text("SELECT count(*) FROM working_calendar")).scalar_one() == 1

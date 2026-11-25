@@ -114,7 +114,7 @@ def test_alembic_history_is_linear_single_head() -> None:
 
     script = ScriptDirectory.from_config(Config(str(BACKEND_DIR / "alembic.ini")))
     heads = script.get_heads()
-    assert heads == ["0002"], f"expected exactly one head 0002, got {heads}"
+    assert heads == ["0003"], f"expected exactly one head 0003, got {heads}"
 
     chain = [rev.revision for rev in script.walk_revisions()]
-    assert set(chain) == {"0001", "0002"}
+    assert set(chain) == {"0001", "0002", "0003"}
