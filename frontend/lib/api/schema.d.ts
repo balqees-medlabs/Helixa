@@ -4,6 +4,41 @@
  */
 
 export interface paths {
+    "/api-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Api Tokens */
+        get: operations["list_api_tokens_api_tokens_get"];
+        put?: never;
+        /** Mint Api Token */
+        post: operations["mint_api_token_api_tokens_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api-tokens/{token_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Api Token */
+        delete: operations["revoke_api_token_api_tokens__token_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -236,6 +271,78 @@ export interface paths {
         get: operations["list_roles_roles_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Runs */
+        get: operations["list_runs_runs_get"];
+        put?: never;
+        /** Create Run */
+        post: operations["create_run_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/runs/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Runs
+         * @description CSV export of the run/sample list (FR-006).
+         */
+        get: operations["export_runs_runs_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Run */
+        get: operations["get_run_runs__run_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/runs/{run_id}/samples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record Run Sample */
+        post: operations["record_run_sample_runs__run_id__samples_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -503,6 +610,73 @@ export interface components {
              */
             to_stage?: number | null;
         };
+        /** ApiTokenCreate */
+        ApiTokenCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Role
+             * @default pipeline-reporter
+             * @constant
+             */
+            role: "pipeline-reporter";
+        };
+        /** ApiTokenMintedOut */
+        ApiTokenMintedOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Created By
+             * Format: uuid
+             */
+            created_by: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Token */
+            token: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /** ApiTokenOut */
+        ApiTokenOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Created By
+             * Format: uuid
+             */
+            created_by: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
         /** BatchAdvanceRequest */
         BatchAdvanceRequest: {
             /**
@@ -651,6 +825,58 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** PipelineSampleCreate */
+        PipelineSampleCreate: {
+            /** Coverage Target X */
+            coverage_target_x?: number | null;
+            /** Ngs Sample Id */
+            ngs_sample_id: string;
+            /**
+             * Sample Id
+             * Format: uuid
+             */
+            sample_id: string;
+            /**
+             * Sample Type
+             * @enum {string}
+             */
+            sample_type: "G" | "R";
+            /** Vendor Id */
+            vendor_id?: string | null;
+        };
+        /** PipelineSampleOut */
+        PipelineSampleOut: {
+            /** Coverage Target X */
+            coverage_target_x: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Created By
+             * Format: uuid
+             */
+            created_by: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Ngs Sample Id */
+            ngs_sample_id: string;
+            /** Pipeline State */
+            pipeline_state: string;
+            /**
+             * Sample Id
+             * Format: uuid
+             */
+            sample_id: string;
+            /** Sample Type */
+            sample_type: string;
+            /** Vendor Id */
+            vendor_id: string | null;
+        };
         /** PortalPushOut */
         PortalPushOut: {
             /** Attempts */
@@ -771,6 +997,69 @@ export interface components {
             description?: string | null;
             /** Slug */
             slug: string;
+        };
+        /** RunCreate */
+        RunCreate: {
+            /** Cycle I1 */
+            cycle_i1?: number | null;
+            /** Cycle I2 */
+            cycle_i2?: number | null;
+            /** Cycle R1 */
+            cycle_r1?: number | null;
+            /** Cycle R2 */
+            cycle_r2?: number | null;
+            /** Instrument */
+            instrument: string;
+            /** Project */
+            project?: string | null;
+            /** Run Date */
+            run_date?: string | null;
+            /** Run Folder */
+            run_folder: string;
+            /** Run Side */
+            run_side?: string | null;
+            /** Storage Location */
+            storage_location?: string | null;
+        };
+        /** RunOut */
+        RunOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Created By
+             * Format: uuid
+             */
+            created_by: string;
+            /** Cycle I1 */
+            cycle_i1: number | null;
+            /** Cycle I2 */
+            cycle_i2: number | null;
+            /** Cycle R1 */
+            cycle_r1: number | null;
+            /** Cycle R2 */
+            cycle_r2: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Instrument */
+            instrument: string;
+            /** Project */
+            project: string | null;
+            /** Readiness */
+            readiness: string;
+            /** Run Date */
+            run_date: string | null;
+            /** Run Folder */
+            run_folder: string;
+            /** Run Side */
+            run_side: string | null;
+            /** Storage Location */
+            storage_location: string | null;
         };
         /** SampleCreate */
         SampleCreate: {
@@ -1001,6 +1290,12 @@ export interface components {
         };
         /** VendorOut */
         VendorOut: {
+            /** Delivery Kind */
+            delivery_kind: string | null;
+            /** Endpoint Ref */
+            endpoint_ref: {
+                [key: string]: unknown;
+            } | null;
             /**
              * Id
              * Format: uuid
@@ -1008,12 +1303,18 @@ export interface components {
             id: string;
             /** Is Active */
             is_active: boolean;
+            /** Md5 Required */
+            md5_required: boolean | null;
             /** Name */
             name: string;
+            /** Naming Pattern */
+            naming_pattern: string | null;
             /** Tat Anchor */
             tat_anchor: string;
             /** Tat Days */
             tat_days: number;
+            /** Verification Method */
+            verification_method: string | null;
         };
         /** VendorSampleMetric */
         VendorSampleMetric: {
@@ -1053,16 +1354,32 @@ export interface components {
              */
             vendor_id: string;
         };
-        /** VendorUpdate */
+        /**
+         * VendorUpdate
+         * @description Flat delivery-profile fields (T004, contracts/endpoints.md): no
+         *     credentials are accepted or stored (FR-021).
+         */
         VendorUpdate: {
+            /** Delivery Kind */
+            delivery_kind?: ("s3" | "sftp") | null;
+            /** Endpoint Ref */
+            endpoint_ref?: {
+                [key: string]: unknown;
+            } | null;
             /** Is Active */
             is_active?: boolean | null;
+            /** Md5 Required */
+            md5_required?: boolean | null;
             /** Name */
             name?: string | null;
+            /** Naming Pattern */
+            naming_pattern?: string | null;
             /** Tat Anchor */
             tat_anchor?: ("receipt" | "sequencing") | null;
             /** Tat Days */
             tat_days?: number | null;
+            /** Verification Method */
+            verification_method?: ("readback" | "receipt" | "checksum_marker") | null;
         };
     };
     responses: never;
@@ -1073,6 +1390,90 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_api_tokens_api_tokens_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiTokenOut"][];
+                };
+            };
+        };
+    };
+    mint_api_token_api_tokens_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiTokenCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiTokenMintedOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_api_token_api_tokens__token_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiTokenOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     login_auth_login_post: {
         parameters: {
             query?: never;
@@ -1449,6 +1850,145 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RoleOut"][];
+                };
+            };
+        };
+    };
+    list_runs_runs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunOut"][];
+                };
+            };
+        };
+    };
+    create_run_runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_runs_runs_export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    get_run_runs__run_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    record_run_sample_runs__run_id__samples_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PipelineSampleCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipelineSampleOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

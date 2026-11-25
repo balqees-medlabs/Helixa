@@ -66,14 +66,14 @@ Web monorepo: `backend/` (FastAPI + Alembic), `frontend/` (Next.js). Migration u
 
 **Independent test**: create a run with several samples (mixed G/R, vendor, target); linking to a registered Sample succeeds with type-based target defaults; an unregistered sample is refused; the CSV export returns the list.
 
-- [ ] T016 [US1] Implement `runs_service` (create run, record sample with link-to-existing-`samples` enforcement, duplicate `ngs_sample_id` check, target defaults 30 G / 15 R) in `backend/app/services/runs_service.py`
-- [ ] T017 [US1] Implement runs API (`POST /runs`, `GET /runs`, `GET /runs/{id}`, `POST /runs/{id}/samples`, `GET /runs/export`) in `backend/app/api/runs.py` guarded to `molecular`/`admin`; wire router (see [contracts/endpoints.md](./contracts/endpoints.md))
-- [ ] T018 [P] [US1] API test: intake RBAC, linkage refusal (422), duplicate id (409), target defaults in `backend/tests/api/test_runs_intake.py`
-- [ ] T019 [US1] Regenerate OpenAPI (`python -m app.cli export-openapi`) and run frontend `gen:client` + `check:contract`
-- [ ] T020 [P] [US1] Typed TanStack Query hooks in `frontend/lib/features/runs/queries.ts`
-- [ ] T021 [US1] Run list + intake form in `frontend/app/(app)/runs/page.tsx` and `frontend/components/RunIntakeForm.tsx` (molecular; sentence case, RTL-safe, brand)
-- [ ] T022 [US1] Run detail view in `frontend/app/(app)/runs/[id]/page.tsx`
-- [ ] T023 [P] [US1] Frontend test (MSW): intake form success, linkage-refusal message, default target in `frontend/tests/runs.test.tsx`
+- [X] T016 [US1] Implement `runs_service` (create run, record sample with link-to-existing-`samples` enforcement, duplicate `ngs_sample_id` check, target defaults 30 G / 15 R) in `backend/app/services/runs_service.py`
+- [X] T017 [US1] Implement runs API (`POST /runs`, `GET /runs`, `GET /runs/{id}`, `POST /runs/{id}/samples`, `GET /runs/export`) in `backend/app/api/runs.py` guarded to `molecular`/`admin`; wire router (see [contracts/endpoints.md](./contracts/endpoints.md))
+- [X] T018 [P] [US1] API test: intake RBAC, linkage refusal (422), duplicate id (409), target defaults in `backend/tests/api/test_runs_intake.py`
+- [X] T019 [US1] Regenerate OpenAPI (`python -m app.cli export-openapi`) and run frontend `gen:client` + `check:contract`
+- [X] T020 [P] [US1] Typed TanStack Query hooks in `frontend/lib/features/runs/queries.ts`
+- [X] T021 [US1] Run list + intake form in `frontend/app/(app)/runs/page.tsx` and `frontend/components/RunIntakeForm.tsx` (molecular; sentence case, RTL-safe, brand)
+- [X] T022 [US1] Run detail view in `frontend/app/(app)/runs/[id]/page.tsx`
+- [X] T023 [P] [US1] Frontend test (MSW): intake form success, linkage-refusal message, default target in `frontend/tests/runs.test.tsx`
 
 **Checkpoint**: US1 independently shippable — the spreadsheet is retired.
 
