@@ -35,9 +35,14 @@ one place (the backend) and prevents the business rules from being duplicated or
 2. Backend: Python FastAPI, Pydantic v2, SQLAlchemy 2.x, Alembic.
 3. Database: PostgreSQL 16 in Docker on the lab server. Alembic owns the `public` schema; no other
    service writes schema.
-4. Authentication is implemented in the backend: argon2 password hashes, short-lived access JWT
-   delivered as an httpOnly, Secure, SameSite cookie, rotating refresh token, admin-created
-   accounts only (no self-signup, no third-party identity provider in v1).
+4. Authentication is implemented in the backend. **Human** auth: argon2 password hashes, short-lived
+   access JWT delivered as an httpOnly, Secure, SameSite cookie, rotating refresh token, admin-created
+   accounts only (no self-signup, no third-party identity provider in v1). **Machine** auth (non-human
+   callers only, e.g. the sequencing pipeline reporter): a dedicated non-human service identity holding
+   a narrowly-scoped role and authenticating with a long-lived, individually **revocable API token**
+   that is argon2-hashed and stored server-side (the raw token is shown once and never persisted),
+   presented as a bearer credential on only the endpoints its role permits and audited as that
+   identity. The machine path never applies to human users and introduces no third-party IdP.
 5. File storage: report files and sequencing data live on the server filesystem under a configured
    data root (`/data` by default) with metadata rows in Postgres. Files are read and written only
    by the backend.
@@ -114,10 +119,16 @@ the workflow authoritative regardless of the client.
 3. Notifications are email only (v1), sent via the Medlabs SMTP server.
 4. Report files are uploaded live and stored under `/data/reports` on the server, with a metadata
    row in Postgres; they are served only through the backend with RBAC applied.
-5. Sequencing ingestion downloads basecall files from the sequencer to `/data/runs` on the server
-   and converts them to FASTQ with `bases2fastq` behind an isolated, mockable module; successful
-   download drives Stage 4 and successful conversion drives Stage 7 (Article V.3). Binary path,
-   source path, staging root, thread count, and retention come from server `.env`.
+5. Sequencing ingestion, FASTQ conversion (`bases2fastq`), augmentation, coverage, and vendor uploads
+   are performed by the external lab pipeline, which **reports results into Helixa** through an isolated,
+   mockable reporting module. The backend tracks runs, per-sample results, coverage verdicts, and
+   deliveries, and **drives the stage gates server-side from reported milestones**: basecalls present
+   drives Stage 4 and successful FASTQ conversion plus QC pass drives Stage 7 (Article V.3, unchanged).
+   Helixa stores references and facts only (run/FASTQ paths, sizes, checksums, markers, verdicts) —
+   never file contents and never vendor credentials. Reporting-interface configuration (the reporting
+   module's identity scope and any staging/retention references) comes from server `.env`. *(If a future
+   deployment instead has the backend itself download and convert, that reverts to a backend-wrapped
+   `bases2fastq` module per Article II.7 — recorded as a new decision.)*
 
 Rationale: External dependencies change on their own schedule; isolating and status-tracking them
 keeps the rest of the system stable and operations recoverable.
@@ -169,4 +180,4 @@ Versioning policy (semantic):
 Compliance review: reviewers MUST verify article compliance before merge; foundation work proceeds
 one layer-spec at a time (Database → Backend → Frontend), each reviewed before the next begins.
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-31 | **Last Amended**: 2026-11-13
+**Version**: 2.1.0 | **Ratified**: 2026-10-31 | **Last Amended**: 2026-11-25
